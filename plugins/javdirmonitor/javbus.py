@@ -5,16 +5,14 @@ from lxml import etree
 import re
 import requests
 
-class JavbusWeb(object, metaclass=Singleton):
+class JavbusWeb(object):
     _session = requests.Session()
 
+    global _web_base
     _web_base = "https://www.javbus.com"
-    global _javbus_web_base
-    _javbus_web_base = _web_base
-    _proxies = settings.PROXY
-    
     _page_limit = 50
     _timout = 5
+    _proxies = settings.PROXY
 
     _weburls = {
         # 关键字搜索(有码)
@@ -55,13 +53,13 @@ class JavbusWeb(object, metaclass=Singleton):
                 "tags": ['./div[@class="photo-info"]/span/div[@class="item-tag"]/button/text()', []],
             },
             "format": {
-                "img": lambda x : None if not x else _javbus_web_base + x
+                "img": lambda x : None if not x else _web_base + x
             }
         },
         "detail_info": {
             "id": '//span[text()="識別碼:"]/following-sibling::span[1]/text()',
             "title": '//div[@class="container"]/h3/text()',
-            'img': ['//a[@class="bigImage"]/@href', lambda x : None if not x else _javbus_web_base + x],
+            'img': ['//a[@class="bigImage"]/@href', lambda x : None if not x else _web_base + x],
             "date": ['//span[text()="發行日期:"]/following-sibling::text()', lambda x:None if not x else x.strip()],
             "videoLength": ['//span[text()="長度:"]/following-sibling::text()', lambda x:None if not x else x.replace('分鐘','').strip()],
         },
@@ -137,21 +135,19 @@ class JavbusWeb(object, metaclass=Singleton):
             },
             'format': {
                 'id': lambda a:None if not a else a[a.rfind('/')+1:],
-                "img": lambda x : None if not x else _javbus_web_base + x
+                "img": lambda x : None if not x else _web_base + x
             }
         }
     }
-
-    def __int__(self, cookie=None):
-        pass
-
+    
     @classmethod
     def __invoke_web(cls, url, params=(), cookies='', headers={}):
         req_url = cls._weburls.get(url)
         if not req_url:
             return None
         if "user-agent" not in headers:
-            headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
+            headers['accept-language'] = 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7'
+            headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
         return RequestUtils(cookies=cookies,
                             session=cls._session,
                             headers=headers,
@@ -163,7 +159,11 @@ class JavbusWeb(object, metaclass=Singleton):
         req_url = cls._jsonurls.get(url)
         if not req_url:
             return None
+        headers = {}
+        headers['accept-language'] = 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7'
+        headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
         req = RequestUtils(session=cls._session,
+                            headers=headers,
                             proxies=cls._proxies,
                            timeout=cls._timout).get_res(url=req_url % kwargs)
         return req.json() if req else None
@@ -238,6 +238,8 @@ class JavbusWeb(object, metaclass=Singleton):
         pagination = cls.__get_list('search_pagination', doc)
         return {'movies': movies if movies else [], 'pagination': pagination, "keyword": keyword}
     
+    def search_jav_by_code(self, code):
+        return self.detail(code)
     
     @classmethod
     def detail(cls, id):
@@ -263,18 +265,29 @@ class JavbusWeb(object, metaclass=Singleton):
         uc = re.search(ucReg, doc)
         uc = uc.group(1) if uc else None
         
-        magnets_html = cls.__invoke_web("magnets", headers={'referer': cls._web_base+'/'+id}, params=(gid,uc))
+        magnets_html = cls.__invoke_web("magnets", headers={'referer': _web_base+'/'+id}, params=(gid,uc))
         magnets = cls.__get_list("magnets", magnets_html)
+        if not magnets:
+            magnets = []
         for magnet in magnets:
             id_res = re.search('magnet:\?xt=urn:btih:(\w+)', magnet['link'])
             magnet['id'] = id_res.group(1) if id_res else ""
             magnet['isHD'] = '高清' in magnet['title']
             magnet['hasSubtitle'] = '字幕' in magnet['title'] or '-c' in magnet['title'] or '-C' in magnet['title']
             magnet['numberSize'] = cls.__bytes(size=magnet['size'])
+            magnet['title'] = magnet['title'].replace('  ','')
             
         magnets = filter(lambda x: x['id'] and x['link'] and x['title'] and x['numberSize']>0, magnets)
         magnets = sorted(magnets, key=lambda x:x['numberSize'], reverse=True)
         info['magnets'] = magnets
+        
+        magnet = None
+        if len(magnets) > 0:
+            for m in magnets[::-1]:
+                # 倒着找
+                if not magnet or not magnet.get('hasSubtitle') or m.get('hasSubtitle'):
+                    magnet = m
+        info['magnet'] = magnet
         return info
     
     
@@ -287,8 +300,6 @@ class JavbusWeb(object, metaclass=Singleton):
         movies = cls.__get_list("search_movies", doc)
         pagination = cls.__get_list('search_pagination', doc)
         return {'movies': movies if movies else [], 'pagination': pagination, "actor_id": aid}
-        
-        
         
     def __bytes(size):
         # 'b' | 'gb' | 'kb' | 'mb' | 'pb' | 'tb' | 'B' | 'GB' | 'KB' | 'MB' | 'PB' | 'TB'
