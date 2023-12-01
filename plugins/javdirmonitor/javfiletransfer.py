@@ -213,7 +213,7 @@ class JavFileTransferModule(_ModuleBase):
         :target_dir: 媒体库根目录
         """
         if mediainfo.type.value == "JAV":
-            target_dir = target_dir / mediainfo.actors[0]['starName'] / mediainfo.douban_id
+            target_dir = target_dir / mediainfo.actors[0]['starName']
         
         if mediainfo.type == MediaType.MOVIE:
             # 电影
