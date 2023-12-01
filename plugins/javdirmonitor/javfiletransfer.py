@@ -15,6 +15,7 @@ from app.schemas import TransferInfo, ExistMediaInfo, TmdbEpisode
 from app.schemas.types import MediaType
 from app.utils.string import StringUtils
 from app.utils.system import SystemUtils
+from . import JavMediaType
 
 lock = Lock()
 
@@ -48,6 +49,9 @@ class JavFileTransferModule(_ModuleBase):
                                 message="未找到媒体库目录")
         else:
             logger.info(f"获取转移目标路径：{target}")
+            if not target.exists():
+                target.mkdir(parents=True, exist_ok=False)
+                logger.info(f"创建转移目标路径：{target}")
         # 转移
         return self.transfer_media(in_path=path,
                                    in_meta=meta,
@@ -209,7 +213,7 @@ class JavFileTransferModule(_ModuleBase):
         :param mediainfo: 媒体信息
         :target_dir: 媒体库根目录
         """
-        if mediainfo.type == "Jav":
+        if mediainfo.type == JavMediaType.JAV:
             target_dir = target_dir / mediainfo.actors[0]['starName'] / mediainfo.douban_id
         
         if mediainfo.type == MediaType.MOVIE:

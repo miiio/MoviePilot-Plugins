@@ -32,9 +32,13 @@ from app.utils.system import SystemUtils
 from .javbus import JavbusWeb
 from .javlib import JavlibWeb
 from .javfiletransfer import JavFileTransferModule
+from enum import Enum
 
 lock = threading.Lock()
 
+
+class JavMediaType(Enum):
+    JAV = 'JAV'
 
 class FileMonitorHandler(FileSystemEventHandler):
     """
@@ -65,7 +69,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1.2"
+    plugin_version = "1.1.3"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -348,7 +352,7 @@ class JavDirMonitor(_PluginBase):
         file_meta.cn_name = jav_info.get('title', file_meta.doubanid)
 
         mediainfo: MediaInfo = MediaInfo()
-        mediainfo.type = "Jav"
+        mediainfo.type = JavMediaType.JAV
         mediainfo.title = jav_info.get('title', file_meta.doubanid)
         mediainfo.year = jav_info.get('date', '')
         mediainfo.douban_id = jav_info.get('id', file_meta.doubanid)
@@ -453,7 +457,7 @@ class JavDirMonitor(_PluginBase):
                         ))
                     return
                 
-                logger.info(f"{file_path.name} 识别为：{mediainfo.type} {mediainfo.title_year}")
+                logger.info(f"{file_path.name} 识别为：{mediainfo.type.value} {mediainfo.title_year}")
 
                 episodes_info = None
 
@@ -1019,7 +1023,7 @@ class JavDirMonitor(_PluginBase):
         # 原始文件名
         meta.title = org_title
         meta.apply_words = []
-        meta.type = "Jav"
+        meta.type = JavMediaType.JAV
         # doubanid为番号
         meta.doubanid = title
         return meta
