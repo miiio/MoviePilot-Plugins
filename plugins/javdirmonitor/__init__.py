@@ -65,7 +65,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1"
+    plugin_version = "1.1.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -453,7 +453,7 @@ class JavDirMonitor(_PluginBase):
                         ))
                     return
                 
-                logger.info(f"{file_path.name} 识别为：{mediainfo.type.value} {mediainfo.title_year}")
+                logger.info(f"{file_path.name} 识别为：{mediainfo.type} {mediainfo.title_year}")
 
                 episodes_info = None
 
