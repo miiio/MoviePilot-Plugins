@@ -31,6 +31,7 @@ from app.utils.string import StringUtils
 from app.utils.system import SystemUtils
 from .javbus import JavbusWeb
 from .javlib import JavlibWeb
+from .javfiletransfer import JavFileTransferModule
 
 lock = threading.Lock()
 
@@ -64,7 +65,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.0"
+    plugin_version = "1.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -109,6 +110,7 @@ class JavDirMonitor(_PluginBase):
         self.tmdbchain = TmdbChain()
         self.javbus = JavbusWeb()
         self.javlib = JavlibWeb()
+        self.jav_file_transfer = JavFileTransferModule()
         # 清空配置
         self._dirconf = {}
         self._transferconf = {}
@@ -317,15 +319,17 @@ class JavDirMonitor(_PluginBase):
         
         
         # 去javlib获取评分
-        logger.info("【Javlib】正在通过Javlib API查询Jav详情(获取评分)：%s" % id)
+        logger.info("【Javlib】正在通过Javlib API查询Jav详情：%s" % id)
         javlib_info = self.javlib.detail_by_javid(id)
         if javlib_info:
             logger.info("【Javlib】查询到数据：%s, 评分：%s" % (javlib_info.get("id"), str(javlib_info.get('rating'))))
             jav_info['rating'] = javlib_info.get('rating')
             jav_info['javlib_id'] = javlib_info.get('vid')
+            jav_info['javlib_info'] = javlib_info
         else:
             jav_info['rating'] = 0.0
             jav_info['javlib_id'] = ''
+            jav_info['javlib_info'] = {}
         return jav_info
 
     def __recognize_media(self, file_path):
@@ -353,8 +357,10 @@ class JavDirMonitor(_PluginBase):
         mediainfo.backdrop_path = jav_info.get('backdrop_img', '')
         mediainfo.poster_path = jav_info.get('post_img', '')
         mediainfo.vote_average = jav_info.get('rating', 0)
-        mediainfo.actors = jav_info.get('stars', [])
+        mediainfo.actors = jav_info.get('stars', [{"starId": "-1", "starName": "unknown"}])
         mediainfo.adult = True
+        mediainfo.producer = jav_info.get('producer', {'producerId': '-1', 'producerName': 'unknown'})
+        mediainfo.publisher = jav_info.get('publisher', {'publisherId': '-1', 'publisherName': 'unknown'})
         mediainfo.jav_info = jav_info
 
         return file_meta, mediainfo
@@ -432,13 +438,8 @@ class JavDirMonitor(_PluginBase):
                     logger.debug(f"{event_path} 不是jav文件")
                     return
                 
-                import json
-                logger.info(f"file_meta.doubanid: {file_meta.doubanid}")
-                logger.info(f"jav_info: {json.dumps(mediainfo.jav_info)}")
-                return
-
                 if not mediainfo:
-                    logger.warn(f'未识别到媒体信息，标题：{file_meta.name}')
+                    logger.warn(f'未识别到媒体信息，番号：{file_meta.doubanid}')
                     # 新增转移成功历史记录
                     his = self.transferhis.add_fail(
                         src_path=file_path,
@@ -448,39 +449,23 @@ class JavDirMonitor(_PluginBase):
                     if self._notify:
                         self.chain.post_message(Notification(
                             mtype=NotificationType.Manual,
-                            title=f"{file_path.name} 未识别到媒体信息，无法入库！\n"
-                                  f"回复：```\n/redo {his.id} [tmdbid]|[类型]\n``` 手动识别转移。"
+                            title=f"{file_path.name} 未识别到媒体信息，无法入库！"
                         ))
                     return
-
-                # 如果未开启新增已入库媒体是否跟随TMDB信息变化则根据tmdbid查询之前的title
-                if not settings.SCRAP_FOLLOW_TMDB:
-                    transfer_history = self.transferhis.get_by_type_tmdbid(tmdbid=mediainfo.tmdb_id,
-                                                                           mtype=mediainfo.type.value)
-                    if transfer_history:
-                        mediainfo.title = transfer_history.title
+                
                 logger.info(f"{file_path.name} 识别为：{mediainfo.type.value} {mediainfo.title_year}")
 
-                # 更新媒体图片
-                self.chain.obtain_images(mediainfo=mediainfo)
-
-                # 获取集数据
-                if mediainfo.type == MediaType.TV:
-                    episodes_info = self.tmdbchain.tmdb_episodes(tmdbid=mediainfo.tmdb_id,
-                                                                 season=file_meta.begin_season or 1)
-                else:
-                    episodes_info = None
+                episodes_info = None
 
                 # 获取downloadhash
-                download_hash = self.get_download_hash(src=str(file_path))
+                download_hash = None # self.get_download_hash(src=str(file_path))
 
                 # 转移
-                transferinfo: TransferInfo = self.chain.transfer(mediainfo=mediainfo,
-                                                                 path=file_path,
-                                                                 transfer_type=transfer_type,
-                                                                 target=target,
-                                                                 meta=file_meta,
-                                                                 episodes_info=episodes_info)
+                transferinfo: TransferInfo = self.jav_file_transfer.transfer(mediainfo=mediainfo,
+                                                                            path=file_path,
+                                                                            transfer_type=transfer_type,
+                                                                            target=target,
+                                                                            meta=file_meta)
 
                 if not transferinfo:
                     logger.error("文件转移模块运行失败")
@@ -500,7 +485,7 @@ class JavDirMonitor(_PluginBase):
                     if self._notify:
                         self.chain.post_message(Notification(
                             mtype=NotificationType.Manual,
-                            title=f"{mediainfo.title_year}{file_meta.season_episode} 入库失败！",
+                            title=f"{mediainfo.title_year} 入库失败！",
                             text=f"原因：{transferinfo.message or '未知'}",
                             image=mediainfo.get_message_image()
                         ))
@@ -515,6 +500,7 @@ class JavDirMonitor(_PluginBase):
                     mediainfo=mediainfo,
                     transferinfo=transferinfo
                 )
+                return
 
                 # 刮削单个文件
                 if settings.SCRAP_METADATA:
