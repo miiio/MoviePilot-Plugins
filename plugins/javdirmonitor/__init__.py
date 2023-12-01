@@ -69,7 +69,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1.3"
+    plugin_version = "1.1.4"
     # 插件作者
     plugin_author = "boji"
     # 作者主页

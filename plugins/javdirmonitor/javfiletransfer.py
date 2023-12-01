@@ -15,7 +15,6 @@ from app.schemas import TransferInfo, ExistMediaInfo, TmdbEpisode
 from app.schemas.types import MediaType
 from app.utils.string import StringUtils
 from app.utils.system import SystemUtils
-from . import JavMediaType
 
 lock = Lock()
 
@@ -213,7 +212,7 @@ class JavFileTransferModule(_ModuleBase):
         :param mediainfo: 媒体信息
         :target_dir: 媒体库根目录
         """
-        if mediainfo.type == JavMediaType.JAV:
+        if mediainfo.type.value == "JAV":
             target_dir = target_dir / mediainfo.actors[0]['starName'] / mediainfo.douban_id
         
         if mediainfo.type == MediaType.MOVIE:
