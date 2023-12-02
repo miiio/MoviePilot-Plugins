@@ -182,7 +182,8 @@ class JavScraper:
                     if not is_poster:
                         file_path.write_bytes(r.content)
                     else:
-                        img = Image.open(r.content)
+                        file_path.write_bytes(r.content)
+                        img = Image.open(file_path)
                         w, h = img.size
                         img = img.crop((w - h * 0.7, 0, w, h))
                         if badge:
