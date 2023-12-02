@@ -134,7 +134,7 @@ class JavScraper:
 
         # 演员
         for actor in mediainfo.actors:
-            if actor.get('name', None) is None: continue
+            if actor.get('starName', None) is None: continue
             # 获取中文名
             xactor = DomUtils.add_node(doc, root, "actor")
             DomUtils.add_node(doc, xactor, "name", actor.get("starName") or "")
