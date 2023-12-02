@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.7"
+    plugin_version = "1.8"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -233,6 +233,12 @@ class JavDirMonitor(_PluginBase):
                                             run_date=datetime.datetime.now(
                                                 tz=pytz.timezone(settings.TZ)) + datetime.timedelta(seconds=3)
                                             )
+                    # 关闭一次性开关
+                    self._onlyonce = False
+                    self._onlyonce_path = ""
+                    # 保存配置
+                    self.__update_config()
+
                 else:
                     logger.info("目录监控服务启动，立即运行指定目录一次")
                     self._scheduler.add_job(func=self.sync_onlyonce_path, trigger='date',
@@ -240,11 +246,6 @@ class JavDirMonitor(_PluginBase):
                                                 tz=pytz.timezone(settings.TZ)) + datetime.timedelta(seconds=3)
                                             )
                     
-                # 关闭一次性开关
-                self._onlyonce = False
-                self._onlyonce_path = ""
-                # 保存配置
-                self.__update_config()
 
             # 全量同步定时
             if self._enabled and self._cron:
@@ -316,9 +317,17 @@ class JavDirMonitor(_PluginBase):
         """
         if len(self._onlyonce_path) == 0:
             return
+
         mon_path = self._onlyonce_path.split(":")[0]
         self._dirconf[mon_path] = Path(self._onlyonce_path.split("#")[0].split(":")[1])
         self._transferconf[mon_path] = self._onlyonce_path.split("#")[1] if len(self._onlyonce_path.split("#")) == 1 else self._transfer_type
+
+
+        # 关闭一次性开关
+        self._onlyonce = False
+        self._onlyonce_path = ""
+        # 保存配置
+        self.__update_config()
 
         logger.info(f"立即开始同步指定目录 {mon_path}")
         self.__handle_file(event_path=str(mon_path), mon_path=mon_path)
