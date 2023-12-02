@@ -193,7 +193,7 @@ class JavScraper:
                             badge_img = Image.open(str(badge_path))
                             w, h = img.size
                             badge_img = badge_img.resize((int(w*0.35), int(w*0.35)))
-                            img.paste(badge, (0,0), badge)
+                            img.paste(badge_img, (0,0), badge_img)
                         img.save(file_path)
                 logger.info(f"图片已保存：{file_path}")
                 time.sleep(0.5)
