@@ -119,7 +119,8 @@ class JavScraper:
 
         # 导演
         for director in mediainfo.directors:
-            DomUtils.add_node(doc, root, "director", director.get("directorName") or "")
+            if director:
+                DomUtils.add_node(doc, root, "director", director.get("directorName") or "")
 
         # 演员
         for actor in mediainfo.actors:
