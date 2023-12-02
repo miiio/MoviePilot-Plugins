@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1.8"
+    plugin_version = "1.1.9"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -343,7 +343,8 @@ class JavDirMonitor(_PluginBase):
         """
             
         jav_info = self.javbus.detail(id)
-        
+
+        jav_info['date'] = jav_info.get('date', '').replace('-', '.')
         jav_info['backdrop_img'] = jav_info.get('img', '')
         jav_info['post_img'] = jav_info.get('img', '')
         if jav_info.get('img'):
