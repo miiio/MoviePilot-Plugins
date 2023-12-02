@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1.10"
+    plugin_version = "1.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -344,9 +344,9 @@ class JavDirMonitor(_PluginBase):
             
         jav_info = self.javbus.detail(id)
 
-        jav_info['date'] = (jav_info.get('date', '') or '').replace('-', '.')
-        jav_info['backdrop_img'] = jav_info.get('img', '') or ''
-        jav_info['post_img'] = jav_info.get('img', '') or ''
+        jav_info['date'] = (jav_info.get('date', None) or '').replace('-', '.')
+        jav_info['backdrop_img'] = jav_info.get('img', None) or ''
+        jav_info['post_img'] = jav_info.get('img', None) or ''
         if jav_info.get('img'):
             jav_info['post_img'] = (jav_info.get('img') or '').replace('cover', 'thumb').replace('_b.jpg', '.jpg')
             
@@ -385,32 +385,32 @@ class JavDirMonitor(_PluginBase):
         if jav_info is None:
             return file_meta, None
 
-        file_meta.year = jav_info.get('date', '') or ''
-        file_meta.cn_name = jav_info.get('title', file_meta.doubanid) or file_meta.doubanid
+        file_meta.year = jav_info.get('date', None) or ''
+        file_meta.cn_name = jav_info.get('title', None) or file_meta.doubanid
 
         mediainfo: MediaInfo = MediaInfo()
         mediainfo.type = JavMediaType.JAV
-        mediainfo.title = jav_info.get('title', file_meta.doubanid) or file_meta.doubanid
-        mediainfo.year = jav_info.get('date', '') or ''
-        mediainfo.douban_id = jav_info.get('id', file_meta.doubanid) or file_meta.doubanid
-        mediainfo.original_title = jav_info.get('title', file_meta.doubanid) or file_meta.doubanid
-        mediainfo.release_date = jav_info.get('date', '') or ''
-        mediainfo.backdrop_path = jav_info.get('backdrop_img', '') or ''
-        mediainfo.background_path = jav_info.get('backdrop_img', '') or ''
-        mediainfo.poster_path = jav_info.get('post_img', '') or ''
+        mediainfo.title = jav_info.get('title', None) or file_meta.doubanid
+        mediainfo.year = jav_info.get('date', None) or ''
+        mediainfo.douban_id = jav_info.get('id', None) or file_meta.doubanid
+        mediainfo.original_title = jav_info.get('title', None) or file_meta.doubanid
+        mediainfo.release_date = jav_info.get('date', None) or ''
+        mediainfo.backdrop_path = jav_info.get('backdrop_img', None) or ''
+        mediainfo.background_path = jav_info.get('backdrop_img', None) or ''
+        mediainfo.poster_path = jav_info.get('post_img', None) or ''
         samples = []
-        for i, sample in enumerate(jav_info.get("samples", []) or []):
+        for i, sample in enumerate(jav_info.get("samples", None) or []):
             if i < 30 and "src" in sample and "http" in sample['src']:
                 mediainfo.__setattr__(f"sample{i+1}_path", sample['src'])
                 samples.append(sample['src'])
         mediainfo.samples = samples
-        mediainfo.vote_average = jav_info.get('rating', 0) or 0
-        mediainfo.actors = jav_info.get('stars', [{"starId": "-1", "starName": "unknown"}]) or {"starId": "-1", "starName": "unknown"}
+        mediainfo.vote_average = jav_info.get('rating', None) or 0
+        mediainfo.actors = jav_info.get('stars', None) or {"starId": "-1", "starName": "unknown"}
         mediainfo.directors = [jav_info.get('director', None)]
-        mediainfo.genres = jav_info.get('tags', []) or []
+        mediainfo.genres = jav_info.get('tags', None) or []
         mediainfo.adult = True
-        mediainfo.producer = jav_info.get('producer', {'producerId': '-1', 'producerName': 'unknown'}) or {'producerId': '-1', 'producerName': 'unknown'}
-        mediainfo.publisher = jav_info.get('publisher', {'publisherId': '-1', 'publisherName': 'unknown'}) or {'publisherId': '-1', 'publisherName': 'unknown'}
+        mediainfo.producer = jav_info.get('producer', None) or {'producerId': '-1', 'producerName': 'unknown'}
+        mediainfo.publisher = jav_info.get('publisher', None) or {'publisherId': '-1', 'publisherName': 'unknown'}
         mediainfo.jav_info = jav_info
 
         return file_meta, mediainfo
