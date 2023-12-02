@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.3.6"
+    plugin_version = "1.3.7"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -395,7 +395,7 @@ class JavDirMonitor(_PluginBase):
         mediainfo.douban_id = jav_info.get('id', None) or file_meta.doubanid
         mediainfo.original_title = jav_info.get('title', None) or file_meta.doubanid
         mediainfo.release_date = jav_info.get('date', None) or ''
-        mediainfo.backdrop_path = jav_info.get('backdrop_img', None) or ''
+        # mediainfo.backdrop_path = jav_info.get('backdrop_img', None) or ''
         mediainfo.background_path = jav_info.get('backdrop_img', None) or ''
         mediainfo.poster_path = jav_info.get('backdrop_img', None) or ''
         mediainfo.poster_thumb_path = jav_info.get('post_img', None) or ''

@@ -71,7 +71,7 @@ class JavScraper:
                 if "sample" not in image_name:
                     self.__save_image(url=attr_value,
                                         file_path=file_path.with_name(image_name),
-                                        is_poster=image_name=='poster', badge=False)
+                                        is_poster=attr_name=='poster_path', badge=mediainfo.cn_subtitle)
                 else:
                     sample_dir = file_path.parent.joinpath("extrafanart")
                     if not sample_dir.exists():
@@ -79,7 +79,7 @@ class JavScraper:
                     image_path = sample_dir.joinpath(image_name)
                     self.__save_image(url=attr_value,
                                         file_path=image_path,
-                                        is_poster=False, badge=mediainfo.cn_subtitle)
+                                        is_poster=False, badge=False)
     def __gen_movie_nfo_file(self,
                              mediainfo: MediaInfo,
                              file_path: Path):
