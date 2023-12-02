@@ -71,7 +71,7 @@ class JavScraper:
                 if "sample" not in image_name:
                     self.__save_image(url=attr_value,
                                         file_path=file_path.with_name(image_name),
-                                        is_poster=image_name=='poster')
+                                        is_poster=image_name=='poster', badge=False)
                 else:
                     sample_dir = file_path.parent.joinpath("extrafanart")
                     if not sample_dir.exists():
@@ -79,7 +79,7 @@ class JavScraper:
                     image_path = sample_dir.joinpath(image_name)
                     self.__save_image(url=attr_value,
                                         file_path=image_path,
-                                        is_poster=False)
+                                        is_poster=False, badge=mediainfo.cn_subtitle)
     def __gen_movie_nfo_file(self,
                              mediainfo: MediaInfo,
                              file_path: Path):
@@ -165,7 +165,7 @@ class JavScraper:
         logger.info(f"NFO文件已保存：{file_path}")
         
     @retry(RequestException, logger=logger)
-    def __save_image(self, url: str, file_path: Path, is_poster: bool):
+    def __save_image(self, url: str, file_path: Path, is_poster: bool, badge: bool):
         """
         下载图片并保存
         """
@@ -183,7 +183,13 @@ class JavScraper:
                     else:
                         img = Image.open(r.content)
                         w, h = img.size
-                        img.crop((w - h * 0.705, 0, w, h)).save(file_path)
+                        img = img.crop((w - h * 0.705, 0, w, h))
+                        if badge:
+                            badge_img = Image.open("./zimu.png")
+                            w, h = img.size
+                            badge_img = badge_img.resize((int(w*0.35), int(w*0.35)))
+                            img.paste(badge, (0,0), badge)
+                        img.save(file_path)
                 logger.info(f"图片已保存：{file_path}")
             else:
                 logger.info(f"{file_path.stem}图片下载失败，请检查网络连通性")

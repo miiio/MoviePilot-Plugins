@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.3.4"
+    plugin_version = "1.3.5"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -412,6 +412,7 @@ class JavDirMonitor(_PluginBase):
         mediainfo.adult = True
         mediainfo.producer = jav_info.get('producer', None) or {'producerId': '-1', 'producerName': 'unknown'}
         mediainfo.publisher = jav_info.get('publisher', None) or {'publisherId': '-1', 'publisherName': 'unknown'}
+        mediainfo.cn_subtitle = file_meta.cn_subtitle
         mediainfo.jav_info = jav_info
 
         return file_meta, mediainfo
