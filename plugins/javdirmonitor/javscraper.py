@@ -68,10 +68,18 @@ class JavScraper:
                     and isinstance(attr_value, str) \
                     and attr_value.startswith("http"):
                 image_name = attr_name.replace("_path", "") + Path(attr_value).suffix
-                self.__save_image(url=attr_value,
-                                    file_path=file_path.with_name(image_name),
-                                    is_poster=image_name=='poster')
-   
+                if "sample" not in image_name:
+                    self.__save_image(url=attr_value,
+                                        file_path=file_path.with_name(image_name),
+                                        is_poster=image_name=='poster')
+                else:
+                    sample_dir = file_path.parent.joinpath("extrafanart")
+                    if not sample_dir.exists():
+                        sample_dir.mkdir()
+                    image_path = sample_dir.joinpath(image_name)
+                    self.__save_image(url=attr_value,
+                                        file_path=image_path,
+                                        is_poster=False)
     def __gen_movie_nfo_file(self,
                              mediainfo: MediaInfo,
                              file_path: Path):
