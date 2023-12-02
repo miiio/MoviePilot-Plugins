@@ -273,7 +273,7 @@ class JavFileTransferModule(_ModuleBase):
             # 标题
             "title": mediainfo.title if len(mediainfo.title) <= 48 else (mediainfo.title[:48] + "……"),
             # 主演
-            "actor": mediainfo.actors[0]['starName'],
+            "actor": mediainfo.actors[0]['starName'] if (mediainfo.actors and len(mediainfo)>0 and "starName" in mediainfo.actors[0]) else "unknown",
             # 演员
             "actors": ",".join([actor['starName'] for actor in mediainfo.actors]),
             "producer": mediainfo.producer['producerName'],
