@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.2.1"
+    plugin_version = "1.2.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -405,7 +405,7 @@ class JavDirMonitor(_PluginBase):
                 samples.append(sample['src'])
         mediainfo.samples = samples
         mediainfo.vote_average = jav_info.get('rating', None) or 0
-        mediainfo.actors = jav_info.get('stars', None) or {"starId": "-1", "starName": "unknown"}
+        mediainfo.actors = jav_info.get('stars', None) or [{"starId": "-1", "starName": "unknown"}]
         mediainfo.directors = [jav_info.get('director', None)]
         mediainfo.genres = jav_info.get('tags', None) or []
         mediainfo.adult = True
