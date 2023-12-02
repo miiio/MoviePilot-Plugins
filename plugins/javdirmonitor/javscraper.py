@@ -191,6 +191,7 @@ class JavScraper:
                             img.paste(badge, (0,0), badge)
                         img.save(file_path)
                 logger.info(f"图片已保存：{file_path}")
+                time.sleep(0.5)
             else:
                 logger.info(f"{file_path.stem}图片下载失败，请检查网络连通性")
         except RequestException as err:
