@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1.7"
+    plugin_version = "1.1.8"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -136,7 +136,7 @@ class JavDirMonitor(_PluginBase):
             self._exclude_keywords = config.get("exclude_keywords") or ""
             self._interval = config.get("interval") or 10
             self._cron = config.get("cron")
-            self._scrap_metadata = config.get("scrap_metadata") or True
+            self._scrap_metadata = config.get("scrap_metadata")
             self._rename_format = config.get("rename_format") or self.DEFAULT_RENAME_FORMAT
             self._onlyonce_path = config.get("onlyonce_path") or ""
 
@@ -399,7 +399,7 @@ class JavDirMonitor(_PluginBase):
         mediainfo.poster_path = jav_info.get('post_img', '')
         samples = []
         for i, sample in enumerate(jav_info.get("samples", [])):
-            if i < 10 and "src" in sample and "http" in sample['src']:
+            if i < 30 and "src" in sample and "http" in sample['src']:
                 mediainfo.__setattr__(f"sample{i+1}_path", sample['src'])
                 samples.append(sample['src'])
         mediainfo.samples = samples
@@ -1016,7 +1016,7 @@ class JavDirMonitor(_PluginBase):
             "exclude_keywords": "",
             "interval": 10,
             "cron": "",
-            "scrap_metadata": True,
+            "scrap_metadata": False,
             "rename_format": self.DEFAULT_RENAME_FORMAT,
             "onlyonce_path": "",
         }
