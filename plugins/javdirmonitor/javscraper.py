@@ -14,7 +14,7 @@ from app.utils.common import retry
 from app.utils.dom import DomUtils
 from app.utils.http import RequestUtils
 from app.utils.system import SystemUtils
-
+from PIL import Image
 
 class JavScraper:
     _transfer_type = "link"
@@ -69,7 +69,8 @@ class JavScraper:
                     and attr_value.startswith("http"):
                 image_name = attr_name.replace("_path", "") + Path(attr_value).suffix
                 self.__save_image(url=attr_value,
-                                    file_path=file_path.with_name(image_name))
+                                    file_path=file_path.with_name(image_name),
+                                    is_poster=image_name=='poster')
    
     def __gen_movie_nfo_file(self,
                              mediainfo: MediaInfo,
@@ -156,7 +157,7 @@ class JavScraper:
         logger.info(f"NFO文件已保存：{file_path}")
         
     @retry(RequestException, logger=logger)
-    def __save_image(self, url: str, file_path: Path):
+    def __save_image(self, url: str, file_path: Path, is_poster: bool):
         """
         下载图片并保存
         """
@@ -169,7 +170,12 @@ class JavScraper:
                 if self._transfer_type in ['rclone_move', 'rclone_copy']:
                     self.__save_remove_file(file_path, r.content)
                 else:
-                    file_path.write_bytes(r.content)
+                    if not is_poster:
+                        file_path.write_bytes(r.content)
+                    else:
+                        img = Image.open(r.content)
+                        w, h = img.size
+                        img.crop((w - h * 0.705, 0, w, h)).save(file_path)
                 logger.info(f"图片已保存：{file_path}")
             else:
                 logger.info(f"{file_path.stem}图片下载失败，请检查网络连通性")
