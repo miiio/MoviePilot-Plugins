@@ -189,7 +189,7 @@ class JavScraper:
                         if badge:
                             badge_path = Path(os.path.join(os.path.abspath(os.path.dirname(__file__)), "zimu.png"))
                             if not badge_path.exists():
-                                badge_path.write_bytes(RequestUtils().get_res(url="https://oss-game88.oss-cn-beijing.aliyuncs.com/js_plugs/album/202210/zimu.png", raise_exception=True))
+                                badge_path.write_bytes(RequestUtils().get_res(url="https://oss-game88.oss-cn-beijing.aliyuncs.com/js_plugs/album/202210/zimu.png", raise_exception=True).content)
                             badge_img = Image.open(str(badge_path))
                             w, h = img.size
                             badge_img = badge_img.resize((int(w*0.35), int(w*0.35)))
