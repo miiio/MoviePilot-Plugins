@@ -3,6 +3,7 @@ import re
 import shutil
 import threading
 import traceback
+from enum import Enum
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
 
@@ -32,7 +33,7 @@ from app.utils.system import SystemUtils
 from .javbus import JavbusWeb
 from .javlib import JavlibWeb
 from .javfiletransfer import JavFileTransferModule
-from enum import Enum
+from .javscraper import JavScraper
 
 lock = threading.Lock()
 
@@ -69,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "1.1.5"
+    plugin_version = "1.1.6"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -92,12 +93,16 @@ class JavDirMonitor(_PluginBase):
     _notify = False
     _onlyonce = False
     _cron = None
+    _scrap_metadata = True
     # 模式 compatibility/fast
     _mode = "fast"
     # 转移方式
     _transfer_type = settings.TRANSFER_TYPE
     _monitor_dirs = ""
     _exclude_keywords = ""
+    DEFAULT_RENAME_FORMAT = "{{actor}}/{{year}} {{title}}/{{code}}{% if cn_subtitle %}{{cn_subtitle}}{% endif %}{{fileExt}}"
+    _rename_format = ""
+    _onlyonce_path = ""
     _interval: int = 10
     # 存储源目录与目的目录关系
     _dirconf: Dict[str, Optional[Path]] = {}
@@ -115,6 +120,7 @@ class JavDirMonitor(_PluginBase):
         self.javbus = JavbusWeb()
         self.javlib = JavlibWeb()
         self.jav_file_transfer = JavFileTransferModule()
+        self.jav_scraper = JavScraper()
         # 清空配置
         self._dirconf = {}
         self._transferconf = {}
@@ -130,6 +136,9 @@ class JavDirMonitor(_PluginBase):
             self._exclude_keywords = config.get("exclude_keywords") or ""
             self._interval = config.get("interval") or 10
             self._cron = config.get("cron")
+            self._scrap_metadata = config.get("scrap_metadata") or True
+            self._rename_format = config.get("rename_format") or self.DEFAULT_RENAME_FORMAT
+            self._onlyonce_path = config.get("onlyonce_path") or ""
 
         # 停止现有任务
         self.stop_service()
@@ -144,6 +153,7 @@ class JavDirMonitor(_PluginBase):
             monitor_dirs = self._monitor_dirs.split("\n")
             if not monitor_dirs:
                 return
+
             for mon_path in monitor_dirs:
                 # 格式源目录:目的目录
                 if not mon_path:
@@ -217,13 +227,22 @@ class JavDirMonitor(_PluginBase):
 
             # 运行一次定时服务
             if self._onlyonce:
-                logger.info("目录监控服务启动，立即运行一次")
-                self._scheduler.add_job(func=self.sync_all, trigger='date',
-                                        run_date=datetime.datetime.now(
-                                            tz=pytz.timezone(settings.TZ)) + datetime.timedelta(seconds=3)
-                                        )
+                if len(self._onlyonce_path) == 0:
+                    logger.info("目录监控服务启动，立即运行一次")
+                    self._scheduler.add_job(func=self.sync_all, trigger='date',
+                                            run_date=datetime.datetime.now(
+                                                tz=pytz.timezone(settings.TZ)) + datetime.timedelta(seconds=3)
+                                            )
+                else:
+                    logger.info("目录监控服务启动，立即运行指定目录一次")
+                    self._scheduler.add_job(func=self.sync_onlyonce_path, trigger='date',
+                                            run_date=datetime.datetime.now(
+                                                tz=pytz.timezone(settings.TZ)) + datetime.timedelta(seconds=3)
+                                            )
+                    
                 # 关闭一次性开关
                 self._onlyonce = False
+                self._onlyonce_path = ""
                 # 保存配置
                 self.__update_config()
 
@@ -256,7 +275,10 @@ class JavDirMonitor(_PluginBase):
             "monitor_dirs": self._monitor_dirs,
             "exclude_keywords": self._exclude_keywords,
             "interval": self._interval,
-            "cron": self._cron
+            "cron": self._cron,
+            "scrap_metadata": self._scrap_metadata,
+            "rename_format": self._rename_format,
+            "onlyonce_path": self._onlyonce_path,
         })
 
     @eventmanager.register(EventType.PluginAction)
@@ -287,6 +309,20 @@ class JavDirMonitor(_PluginBase):
             for file_path in SystemUtils.list_files(Path(mon_path), settings.RMT_MEDIAEXT):
                 self.__handle_file(event_path=str(file_path), mon_path=mon_path)
         logger.info("全量同步监控目录完成！")
+        
+    def sync_onlyonce_path(self):
+        """
+        立即运行一次，同步指定目录
+        """
+        if len(self._onlyonce_path) == 0:
+            return
+        mon_path = self._onlyonce_path.split(":")[0]
+        self._dirconf[mon_path] = Path(self._onlyonce_path.split("#")[0].split(":")[1])
+        self._transferconf[mon_path] = self._onlyonce_path.split("#")[1] if len(self._onlyonce_path.split("#")) == 1 else self._transfer_type
+
+        logger.info(f"立即开始同步指定目录 {mon_path}")
+        self.__handle_file(event_path=str(mon_path), mon_path=mon_path)
+        logger.info("监控指定目录完成！")
 
     def event_handler(self, event, mon_path: str, text: str, event_path: str):
         """
@@ -359,9 +395,18 @@ class JavDirMonitor(_PluginBase):
         mediainfo.original_title = jav_info.get('title', file_meta.doubanid)
         mediainfo.release_date = jav_info.get('date', '')
         mediainfo.backdrop_path = jav_info.get('backdrop_img', '')
+        mediainfo.background_path = jav_info.get('backdrop_img', '')
         mediainfo.poster_path = jav_info.get('post_img', '')
+        samples = []
+        for i, sample in enumerate(jav_info.get("samples", [])):
+            if i < 10 and "src" in sample and "http" in sample['src']:
+                mediainfo.__setattr__(f"sample{i+1}_path", sample['src'])
+                samples.append(sample['src'])
+        mediainfo.samples = samples
         mediainfo.vote_average = jav_info.get('rating', 0)
         mediainfo.actors = jav_info.get('stars', [{"starId": "-1", "starName": "unknown"}])
+        mediainfo.directors = jav_info.get('director', [])
+        mediainfo.genres = jav_info.get('tags', [])
         mediainfo.adult = True
         mediainfo.producer = jav_info.get('producer', {'producerId': '-1', 'producerName': 'unknown'})
         mediainfo.publisher = jav_info.get('publisher', {'publisherId': '-1', 'publisherName': 'unknown'})
@@ -469,6 +514,7 @@ class JavDirMonitor(_PluginBase):
                                                                             path=file_path,
                                                                             transfer_type=transfer_type,
                                                                             target=target,
+                                                                            rename_format=self._rename_format,
                                                                             meta=file_meta)
 
                 if not transferinfo:
@@ -504,29 +550,13 @@ class JavDirMonitor(_PluginBase):
                     mediainfo=mediainfo,
                     transferinfo=transferinfo
                 )
-                return
 
                 # 刮削单个文件
-                if settings.SCRAP_METADATA:
-                    self.chain.scrape_metadata(path=transferinfo.target_path,
-                                               mediainfo=mediainfo,
-                                               transfer_type=transfer_type)
+                if self._scrap_metadata:
+                    self.jav_scraper.scrape_metadata(path=transferinfo.target_path,
+                                                    mediainfo=mediainfo,
+                                                    transfer_type=transfer_type)
 
-                """
-                {
-                    "title_year season": {
-                        "files": [
-                            {
-                                "path":,
-                                "mediainfo":,
-                                "file_meta":,
-                                "transferinfo":
-                            }
-                        ],
-                        "time": "2023-08-24 23:23:23.332"
-                    }
-                }
-                """
                 # 发送消息汇总
                 media_list = self._medias.get(mediainfo.title_year + " " + file_meta.season) or {}
                 if media_list:
@@ -712,7 +742,7 @@ class JavDirMonitor(_PluginBase):
                                 'component': 'VCol',
                                 'props': {
                                     'cols': 12,
-                                    'md': 4
+                                    'md': 3
                                 },
                                 'content': [
                                     {
@@ -728,7 +758,7 @@ class JavDirMonitor(_PluginBase):
                                 'component': 'VCol',
                                 'props': {
                                     'cols': 12,
-                                    'md': 4
+                                    'md': 3
                                 },
                                 'content': [
                                     {
@@ -744,7 +774,23 @@ class JavDirMonitor(_PluginBase):
                                 'component': 'VCol',
                                 'props': {
                                     'cols': 12,
-                                    'md': 4
+                                    'md': 3
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VSwitch',
+                                        'props': {
+                                            'model': 'scrap_metadata',
+                                            'label': '刮削数据',
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                    'md': 3
                                 },
                                 'content': [
                                     {
@@ -883,10 +929,54 @@ class JavDirMonitor(_PluginBase):
                                     {
                                         'component': 'VTextarea',
                                         'props': {
+                                            'model': 'rename_format',
+                                            'label': '重命名格式',
+                                            'rows': 1,
+                                            'placeholder': 'e.g.' + self.DEFAULT_RENAME_FORMAT
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'component': 'VRow',
+                        'content': [
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VTextarea',
+                                        'props': {
                                             'model': 'exclude_keywords',
                                             'label': '排除关键词',
                                             'rows': 2,
                                             'placeholder': '每一行一个关键词'
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'component': 'VRow',
+                        'content': [
+                            {
+                                'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VTextarea',
+                                        'props': {
+                                            'model': 'onlyonce_path',
+                                            'label': '指定路径（仅本次运行）',
+                                            'rows': 1,
+                                            'placeholder': '指定路径'
                                         }
                                     }
                                 ]
@@ -925,7 +1015,10 @@ class JavDirMonitor(_PluginBase):
             "monitor_dirs": "",
             "exclude_keywords": "",
             "interval": 10,
-            "cron": ""
+            "cron": "",
+            "scrap_metadata": True,
+            "rename_format": self.DEFAULT_RENAME_FORMAT,
+            "onlyonce_path": "",
         }
 
     def get_page(self) -> List[dict]:
@@ -1002,6 +1095,9 @@ class JavDirMonitor(_PluginBase):
         else:
             t = t.group().replace("_", "-")
             return t
+        
+    def is_jav_chinese(self, title):
+        return '字幕' in title or '-c' in title or '-C' in title
 
     def JavMetaInfo(self, title: str, subtitle: str = None) -> MetaBase:
         """
@@ -1024,6 +1120,7 @@ class JavDirMonitor(_PluginBase):
         meta.title = org_title
         meta.apply_words = []
         meta.type = JavMediaType.JAV
+        meta.cn_subtitle = self.is_jav_chinese(org_title)
         # doubanid为番号
         meta.doubanid = title
         return meta

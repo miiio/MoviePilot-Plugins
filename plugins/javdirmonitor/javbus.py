@@ -12,7 +12,11 @@ class JavbusWeb(object):
     _web_base = "https://www.javbus.com"
     _page_limit = 50
     _timout = 5
-    _proxies = settings.PROXY
+    # _proxies = settings.PROXY
+    _proxies = {
+                "http": "http://192.168.1.10:7890",
+                "https": "http://192.168.1.10:7890"
+            }
 
     _weburls = {
         # 关键字搜索(有码)

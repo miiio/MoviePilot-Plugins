@@ -30,7 +30,7 @@ class JavFileTransferModule(_ModuleBase):
     def init_setting(self) -> Tuple[str, Union[str, bool]]:
         pass
 
-    def transfer(self, path: Path, meta: MetaBase, mediainfo: MediaInfo,
+    def transfer(self, path: Path, meta: MetaBase, mediainfo: MediaInfo, rename_format: str,
                  transfer_type: str, target: Path = None) -> TransferInfo:
         """
         文件转移
@@ -56,6 +56,7 @@ class JavFileTransferModule(_ModuleBase):
                                    in_meta=meta,
                                    mediainfo=mediainfo,
                                    transfer_type=transfer_type,
+                                   rename_format=rename_format,
                                    target_dir=target)
     
     def transfer_media(self,
@@ -63,7 +64,8 @@ class JavFileTransferModule(_ModuleBase):
                        in_meta: MetaBase,
                        mediainfo: MediaInfo,
                        transfer_type: str,
-                       target_dir: Path
+                       target_dir: Path,
+                       rename_format: str,
                        ) -> TransferInfo:
         """
         识别并转移一个文件或者一个目录下的所有文件
@@ -94,9 +96,10 @@ class JavFileTransferModule(_ModuleBase):
         # rename_format = settings.TV_RENAME_FORMAT \
         #     if mediainfo.type == MediaType.TV else settings.MOVIE_RENAME_FORMAT
 
-        rename_format = "{{year}} {{title}}" \
-                        "/{{year}} {{title}}" \
-                        "{{fileExt}}"
+        # MOVIE_RENAME_FORMAT: str = "{{title}}{% if year %} ({{year}}){% endif %}" \
+        #                         "/{{title}}{% if year %} ({{year}}){% endif %}{% if part %}-{{part}}{% endif %}{% if videoFormat %} - {{videoFormat}}{% endif %}" \
+        #                         "{{fileExt}}"
+        # rename_format = "{{actor}}/{{year}} {{title}}/{{code}}{% if cn_subtitle %}{{cn_subtitle}}{% endif %}{{fileExt}}"
 
         # 判断是否为文件夹
         if in_path.is_dir():
@@ -213,7 +216,7 @@ class JavFileTransferModule(_ModuleBase):
         :target_dir: 媒体库根目录
         """
         if mediainfo.type.value == "JAV":
-            target_dir = target_dir / mediainfo.actors[0]['starName']
+            target_dir = target_dir
         
         if mediainfo.type == MediaType.MOVIE:
             # 电影
@@ -275,6 +278,7 @@ class JavFileTransferModule(_ModuleBase):
             "actors": ",".join([actor['starName'] for actor in mediainfo.actors]),
             "producer": mediainfo.producer['producerName'],
             "publisher": mediainfo.publisher['publisherName'],
+            "cn_subtitle": "-C" if meta.cn_subtitle else None,
             # 文件后缀
             "fileExt": file_ext,
         }
