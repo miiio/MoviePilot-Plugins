@@ -101,9 +101,10 @@ class JavScraper:
         DomUtils.add_node(doc, root, "title", mediainfo.title or "")
         DomUtils.add_node(doc, root, "originaltitle", mediainfo.original_title or "")
         # 发布日期
-        DomUtils.add_node(doc, root, "premiered", mediainfo.release_date or "")
+        DomUtils.add_node(doc, root, "premiered", (mediainfo.release_date or "") + " 00:00:00")
+        DomUtils.add_node(doc, root, "releasedate", (mediainfo.release_date or "")  + " 00:00:00")
         # 年份
-        DomUtils.add_node(doc, root, "year", mediainfo.year or "")
+        DomUtils.add_node(doc, root, "year", (mediainfo.year or "0000")[:4])
         # 保存
         self.__save_nfo(doc, file_path.with_suffix(".nfo"))
 
