@@ -1,4 +1,5 @@
 import time
+import os
 from pathlib import Path
 from typing import Union
 from xml.dom import minidom
@@ -181,12 +182,12 @@ class JavScraper:
                     if not is_poster:
                         file_path.write_bytes(r.content)
                     else:
-                        file_path.write_bytes(r.content)
-                        img = Image.open(file_path)
+                        img = Image.open(r.content)
                         w, h = img.size
                         img = img.crop((w - h * 0.7, 0, w, h))
                         if badge:
-                            badge_img = Image.open("./zimu.png")
+                            badge_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "zimu.png")
+                            badge_img = Image.open(badge_path)
                             w, h = img.size
                             badge_img = badge_img.resize((int(w*0.35), int(w*0.35)))
                             img.paste(badge, (0,0), badge)
