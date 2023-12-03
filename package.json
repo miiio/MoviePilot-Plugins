@@ -6,5 +6,13 @@
         "icon": "directory.png",
         "author": "boji",
         "level": 1
+    },
+    "JavSubscribe": {
+        "name": "Jav订阅",
+        "description": "监控指定Jav页面，自动通过M-Team搜索下载",
+        "version": "0.1",
+        "icon": "movie.png",
+        "author": "boji",
+        "level": 2
     }
 }
