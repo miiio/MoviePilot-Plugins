@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.2"
+    plugin_version = "0.2.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -142,7 +142,7 @@ class JavSubscribe(_PluginBase):
         self._searching = True
         logger.info(f"开始刷新Jav订阅数据 ...")
         
-        addr_list = self._rank + self._custom_addrs
+        addr_list = self._ranks + self._custom_addrs
         if not addr_list:
             logger.info(f"未设置订阅地址")
             return
