@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.3.1"
+    plugin_version = "0.3.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -71,7 +71,6 @@ class JavSubscribe(_PluginBase):
     def init_plugin(self, config: dict = None):
         self.jav115 = None
         self.downloadchain = DownloadChain()
-        self.mediaserver_db: Session = Depends(get_db)
         self.javlibWeb = JavlibWeb()
         self.aria2 = aria2p.API(
             aria2p.Client(
@@ -448,8 +447,8 @@ class JavSubscribe(_PluginBase):
         }
 
     @db_query
-    def jav_exists_by_javid(self, javid: str):
-        return self.mediaserver_db.query(MediaServerItem).filter(MediaServerItem.title.like(javid)).first()
+    def jav_exists_by_javid(self, javid: str, db: Session = Depends(get_db)):
+        return db.query(MediaServerItem).filter(MediaServerItem.title.like(javid)).first()
     
     def is_jav(self, title):
         if not title:
