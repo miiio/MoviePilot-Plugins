@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.3"
+    plugin_version = "0.3.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -241,7 +241,7 @@ class JavSubscribe(_PluginBase):
                 continue
             if info and info['id'] in [h.get("id") for h in history]:
                 continue
-            itemid = self.jav_exists_by_javid(javid=info.get('id'))
+            itemid = self.jav_exists_by_javid(info.get('id'))
             if itemid is not None:
                 logger.info(info['id'] + ' 媒体库中已存在')
                 continue
