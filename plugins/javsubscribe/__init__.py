@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.2.1"
+    plugin_version = "0.2.3"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -174,7 +174,6 @@ class JavSubscribe(_PluginBase):
 
         self.jav115 = Jav115()
         logger.info(f"开始处理待下载任务...")
-        self.mteam_info = self.get_mteam_info_by_db()
         for item in wait_download_queue[:]:
             javid = item['id']
             if not javid or not self.is_jav(javid): continue
@@ -222,7 +221,7 @@ class JavSubscribe(_PluginBase):
         logger.info(f"获取页面数据：{addr} ...")
         info_list = []
         if "javmenu.com" in addr:
-            info_list = JavMenuWeb().page_jav_list(addr)
+            info_list = JavMenuWeb().page_jav_list(addr)['jav_list']
 
         # 读取历史记录
         if self._clearflag:
@@ -451,10 +450,6 @@ class JavSubscribe(_PluginBase):
     @db_query
     def jav_exists_by_javid(self, javid: str):
         return self.mediaserver_db.query(MediaServerItem).filter(MediaServerItem.title.like(javid)).first()
-    
-    @db_query
-    def get_mteam_info_by_db(self):
-        return self.mediaserver_db.query(Site).filter(Site.name == "馒头").first()
     
     def is_jav(self, title):
         if not title:
