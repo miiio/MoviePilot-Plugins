@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.3.8"
+    plugin_version = "0.4"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -69,7 +69,7 @@ class JavSubscribe(_PluginBase):
     _searching = False
 
     def init_plugin(self, config: dict = None):
-        self.media_server_db = get_db()
+        self.media_server_db = get_db().__next__()
         self.jav115 = None
         self.downloadchain = DownloadChain()
         self.javlibWeb = JavlibWeb()

@@ -10,7 +10,7 @@
     "JavSubscribe": {
         "name": "Jav订阅",
         "description": "监控指定Jav页面，自动通过M-Team搜索下载",
-        "version": "0.3.8",
+        "version": "0.4",
         "icon": "movie.png",
         "author": "boji",
         "level": 2
