@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.6.1"
+    plugin_version = "0.6.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -176,6 +176,11 @@ class JavSubscribe(_PluginBase):
         self.jav115 = Jav115()
         logger.info(f"开始处理待下载任务...")
         for item in wait_download_queue[:]:
+            count = len(self.aria2.get_downloads())
+            if count >= 5:
+                logger.info(f"当前下载任务数：{count}，结束订阅刷新任务.")
+                break
+                
             javid = item['id']
             if not javid or not self.is_jav(javid): continue
             # 处理每一个番号
