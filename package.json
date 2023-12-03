@@ -2,7 +2,7 @@
     "JavDirMonitor": {
         "name": "Jav目录监控",
         "description": "监控目录文件发生变化时实时整理到媒体库。",
-        "version": "2.1",
+        "version": "2.2",
         "icon": "directory.png",
         "author": "boji",
         "level": 1

@@ -148,6 +148,8 @@ class JavScraper:
         genres = mediainfo.genres or []
         for genre in genres:
             DomUtils.add_node(doc, root, "genre", genre.get("tagName") or "")
+        if mediainfo.cn_subtitle:
+            DomUtils.add_node(doc, root, "genre", "中文字幕")
         # 评分
         DomUtils.add_node(doc, root, "rating", mediainfo.vote_average or "0")
 
