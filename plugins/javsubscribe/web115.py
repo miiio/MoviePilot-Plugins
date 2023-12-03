@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import re
 import time
 from urllib import parse
@@ -5,6 +7,8 @@ from urllib import parse
 import requests
 import re
 from app.utils.http import RequestUtils
+from app.log import logger
+import json
 
 class Py115Web:
     cookie = None
@@ -20,7 +24,11 @@ class Py115Web:
         #     cookies = cookie_cloud.get_decrypted_data()['115.com']
         #     cookie = ';'.join([i['name']+'='+i['value'] for i in cookies if i['domain']=='.115.com'])
         self.cookie = cookie
-        self.req = RequestUtils(cookies=self.cookie, session=requests.Session(), ua='Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36')
+        headers = {}
+        headers['accept-language'] = 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7'
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
+        self.req = RequestUtils(cookies=self.cookie, session=requests.Session(), headers=headers)
 
     # 登录
     def login(self):
@@ -46,7 +54,8 @@ class Py115Web:
                 return rootobject.get("id") != 0, rootobject.get("id")
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "getdirid 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False, ''
 
     # 获取sign
@@ -58,13 +67,15 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = "获取 SIGN 错误：{}".format(rootobject.get("error_msg"))
+                    self.err = "获取 SIGN 错误：{}".format(rootobject.get("error_msg", ''))
+                    logger.warn("[web115] " + self.err)
                     return False
                 self.sign = rootobject.get("sign")
                 return True
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
             self.err = "异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False
 
     # 获取UID
@@ -76,13 +87,15 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = "获取 UID 错误：{}".format(rootobject.get("error_msg"))
+                    self.err = "获取 UID 错误：{}".format(rootobject.get("error_msg", ''))
+                    logger.warn("[web115] " + self.err)
                     return False
                 self.uid = rootobject.get("uid")
                 return True
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "getuid 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False
 
     # 获取任务列表
@@ -98,6 +111,7 @@ class Py115Web:
                     rootobject = p.json()
                     if not rootobject.get("state"):
                         self.err = "获取任务列表错误：{}".format(rootobject["error"])
+                        logger.warn("[web115] " + self.err)
                         return False, tasks
                     if rootobject.get("count") == 0:
                         break
@@ -107,7 +121,8 @@ class Py115Web:
             return True, tasks
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "gettasklist 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False, []
 
     # 添加任务
@@ -135,12 +150,14 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return False, self.err
                 return True, rootobject.get("info_hash")
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "addtask 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False, self.err
 
     # 删除任务
@@ -153,12 +170,14 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return False
                 return True
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "deltask 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False
 
     # 根据ID获取文件夹路径
@@ -172,6 +191,7 @@ class Py115Web:
                 rootobject = p.json()
                 if not rootobject.get("state"):
                     self.err = "获取 ID[{}]路径 错误：{}".format(id, rootobject["error"])
+                    logger.warn("[web115] " + self.err)
                     return False, path
                 patharray = rootobject["path"]
                 for pathobject in patharray:
@@ -180,27 +200,33 @@ class Py115Web:
                     path += pathobject.get("name") + '/'
                 if path == "/":
                     self.err = "文件路径不存在"
+                    logger.warn("[web115] " + self.err)
                     return False, path
                 return True, path
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "getiddir 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False, '/'
 
     def adddir(self, pid, cname):
-        try:
-            url = "https://webapi.115.com/files/add"
-            postdata = "pid={}&cname={}".format(pid, cname)
-            p = self.req.post_res(url=url, params=postdata.encode('utf-8'))
-            if p:
-                rootobject = p.json()
-                if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
-                    return False
-                return True
-        except Exception as result:
-            # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+        # try:
+        url = "https://webapi.115.com/files/add"
+        # postdata = "pid={}&cname={}".format(pid, cname)
+        postdata = {"pid": pid, "cname": cname}
+        p = self.req.post_res(url=url, params=postdata)
+        if p:
+            print(p.text)
+            rootobject = p.json()
+            if not rootobject.get("state"):
+                self.err = rootobject.get("error_msg", '')
+                logger.warn("[web115] " + self.err)
+                return False
+            return True
+        # except Exception as result:
+        #     # ExceptionUtils.exception_traceback(result)
+        #     self.err = "adddir 异常错误：{}".format(result)
+        #     logger.warn("[web115] " + self.err)
         return False
     
     def getm3u8(self, pid):
@@ -226,7 +252,8 @@ class Py115Web:
                 return False, "播放失败，视频未转码！"
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "getm3u8 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False, self.err
     
     def search_media(self, keyword):
@@ -236,7 +263,8 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return None
                 for item in rootobject.get('data', []):
                     if item.get('play_long') and item.get('n'):
@@ -244,7 +272,8 @@ class Py115Web:
                 return None
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "search_media 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return None
     
     def searchjav(self, javid):
@@ -260,7 +289,8 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return None
                 for item in rootobject.get('data', []):
                     if item.get('play_long') and item.get('n') and re.search(reg.upper(), item.get('n').upper()):
@@ -269,7 +299,8 @@ class Py115Web:
                 return None
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "searchjav 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return None
     
     def task_lists(self, page=1, magnet=None):
@@ -279,7 +310,8 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return None
                 if magnet is None:
                     return rootobject.get('tasks', [])
@@ -290,7 +322,8 @@ class Py115Web:
                     return None
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "task_lists 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return None
     
     def dir_list(self, dirid):
@@ -301,12 +334,14 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state") or not rootobject.get("data"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return None
                 return rootobject.get("data", None)
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "dir_list 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return None
     
     # 批量删除
@@ -319,12 +354,14 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return False
                 return True
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "batch_del 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False
     
     # 文件重命名
@@ -338,12 +375,14 @@ class Py115Web:
             if p:
                 rootobject = p.json()
                 if not rootobject.get("state"):
-                    self.err = rootobject.get("error_msg")
+                    self.err = rootobject.get("error_msg", '')
+                    logger.warn("[web115] " + self.err)
                     return False
                 return True
         except Exception as result:
             # ExceptionUtils.exception_traceback(result)
-            self.err = "异常错误：{}".format(result)
+            self.err = "batch_rename 异常错误：{}".format(result)
+            logger.warn("[web115] " + self.err)
         return False
     
     def mkdir(self, target_dir):

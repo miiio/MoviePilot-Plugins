@@ -4,6 +4,7 @@ from urllib import parse
 from pathlib import Path
 import requests
 import re
+import json
 from app.utils.http import RequestUtils
 from app.log import logger
 from app.core.config import settings
@@ -30,15 +31,16 @@ class Jav115:
 
     def __init__(self) -> None:
 
-        self.cookiecloud = CookieCloudHelper(
-            server=settings.COOKIECLOUD_HOST,
-            key=settings.COOKIECLOUD_KEY,
-            password=settings.COOKIECLOUD_PASSWORD
-        )
-        cookies, msg = self.cookiecloud.download()
-        if msg != "":
-            logger.error("获取115 cookies失败：" + msg)
-        cookies_115 = cookies['115.com'] if '115.com' in cookies else ""
+        # self.cookiecloud = CookieCloudHelper(
+        #     server=settings.COOKIECLOUD_HOST,
+        #     key=settings.COOKIECLOUD_KEY,
+        #     password=settings.COOKIECLOUD_PASSWORD
+        # )
+        # cookies, msg = self.cookiecloud.download()
+        # if msg != "":
+        #     logger.error("获取115 cookies失败：" + msg)
+        # cookies_115 = cookies['115.com'] if '115.com' in cookies else ""
+        cookies_115 = "115_lang=zh; CID=9109bf4120ce56487915018f50c41b44; SEID=c530abae7e6b47f4915162806616db98f43649ee75e97b28a7f9107d75084a2b213db9f5f5353063ff92429ecb45491d62132d1aeee0bd9da2279b18; UID=594084887_A1_1699108739; USERSESSIONID=5390c46dd97fad757063f7b33e0b670112b22a3842dc4ffdab8a2f89085b0ed3; acw_tc=784e2c9d17016053577866383e6e2338ef395896912178bb9010ceeb125153"
         # CID=xxx;SEID=xxx;UID=xxx;USERSESSIONID=xxx;acw_tc=xxx;acw_tc=xxx;acw_tc=xx',
         uid, cid, seid = self.parse_115_cookies(cookies_115)
         self.client_115 = py115.connect(credential=Credential(uid=uid, cid=cid, seid=seid))
@@ -51,8 +53,8 @@ class Jav115:
         key_value_pairs = cookies.split(';')
         result = {}
         for pair in key_value_pairs:
-            key, value = pair.split('=')
-            result[key] = value
+            key, value = pair.strip().split('=')
+            result[key.strip()] = value.strip()
         if 'CID' in result and 'SEID' in result and 'UID' in result:
             return result['UID'], result['CID'], result['SEID']
         else:
@@ -93,7 +95,7 @@ class Jav115:
                 actor = 'unknown'
             else:
                 actor = jav_info['stars'][0]['starName']
-            target_path = jav_path + actor
+            target_path = "{}{}".format(jav_path, actor)
             new_name = "{}{} {}".format(jav_info['date'], ' 【中文字幕】' if magnet_info['hasSubtitle'] else '', jav_info['title'])
             ret = self._upload_offline_115(magnet=magnet_info['link'], target_path=target_path, new_name=new_name, clear_dir=True)
             if ret == False:
@@ -121,16 +123,40 @@ class Jav115:
         
         pick_code = jav_115_file.get("pc")
         return self.storage_115.request_download(pickcode=pick_code)
-    
+
+    def mkdir(self, target_dir):
+        target_dir = target_dir.strip()
+        flag, pid = self.client_web_115.getdirid(target_dir)
+        if flag:
+            return pid
+        # /jav/xxx/bbb/ccc
+        dirs = target_dir.split('/')
+        cur_path = ''
+        flag, cur_pid = self.client_web_115.getdirid('/')
+        for item in dirs:
+            cur_path += '/' + item
+            flag, pid = self.client_web_115.getdirid(cur_path)
+            if not flag:
+                # ret = self.adddir(cur_pid, item)
+                try:
+                    self.storage_115.make_dir(cur_pid, item)
+                except Exception as e:
+                    pass
+                flag, pid = self.client_web_115.getdirid(cur_path)
+            cur_pid = pid    
+        
+        return cur_pid
     
     def _upload_offline_115(self, magnet, target_path, new_name=None, clear_dir=False):
         logger.info("[115] 离线路径:%s" % target_path)
+        self.storage_115.delete()
         ret, tid = self.client_web_115.getdirid(target_path)
         # 目录不存在
         if not ret:
             logger.info("[115] 创建目标目录:%s..." % target_path)
-            ret = self.client_web_115.mkdir(target_path)
-            if not ret:
+            # ret = self.client_web_115.mkdir(target_path)
+            ret = self.mkdir(target_path)
+            if not ret and len(ret) > 1:
                 logger.warning("[115] 离线失败, %s目标目录创建失败!" % target_path)
                 return False
             logger.info("[115] 创建目标目录创建完成.")
@@ -157,36 +183,40 @@ class Jav115:
             
         target_dir = self.client_web_115.dir_list(target_cid)
         
-        if clear_dir:
-            # 清理大小小于888MB的文件
-            del_fids = [i.get("fid") for i in target_dir if int(i.get('s', 931135489)) < 931135488]
-            flag = self.client_web_115.batch_del(target_cid, del_fids)
-            if flag:
-                logger.info("[115] 成功删除{}个垃圾文件(<888MB)".format(len(del_fids)))
-            else:
-                logger.warning("[115] {}个垃圾文件删除失败!".format(len(del_fids)))
+        # if clear_dir:
+        #     # 清理大小小于888MB的文件
+        #     del_fids = [i.get("fid") for i in target_dir if int(i.get('s', 931135489)) < 931135488]
+        #     # flag = self.client_web_115.batch_del(target_cid, del_fids)
+        #     # fids = "&".join(['fid[{}]={}'.format(i, del_fids[i]) for i in range(len(del_fids))])
+        #     self.storage_115.delete(del_fids)
+        #     if flag:
+        #         logger.info("[115] 成功删除{}个垃圾文件(<888MB)".format(len(del_fids)))
+        #     else:
+        #         logger.warning("[115] {}个垃圾文件删除失败!".format(len(del_fids)))
         
         if new_name:
             new_name = new_name[:250]
             new_fids = [target_cid]
             new_fnames = [new_name]
-        
+            self.storage_115.rename(target_cid, new_name)
             total_files = [i for i in target_dir if int(i.get('s', 931135488)) > 931135488]
             ico_dict = {}
             for item in total_files:
-                new_fids.append(item['fid'])
+                name = ""
                 if item['ico'] not in ico_dict:
                     ico_dict[item['ico']] = 1
-                    new_fnames.append("{}.{}".format(new_name, item['ico']))
+                    name ="{}.{}".format(new_name, item['ico'])
                 else:
-                    new_fnames.append("{} ({}).{}".format(new_name, ico_dict[item['ico'], item['ico']]))
+                    name = "{} ({}).{}".format(new_name, ico_dict[item['ico'], item['ico']])
+                new_fids.append(item['fid'])
+                new_fnames.append(name)
+                self.storage_115.rename(item['fid'], name)
                 ico_dict[item['ico']] += 1
-                
-            flag = self.client_web_115.batch_rename(new_fids, new_fnames)
-            if flag:
-                logger.info("[115] 文件重命名成功：{}".format(new_name))
-            else:
-                logger.warning("[115] 文件重命名失败!")
+            # flag = self.client_web_115.batch_rename(new_fids, new_fnames)
+            # if flag:
+            #     logger.info("[115] 文件重命名成功：{}".format(new_name))
+            # else:
+            #     logger.warning("[115] 文件重命名失败!")
         
         target_dir = self.client_web_115.dir_list(target_cid)
         return sorted(target_dir, key=lambda x:(x.get('class', '')=='avi', x.get('s', 0)),reverse=True)[0]

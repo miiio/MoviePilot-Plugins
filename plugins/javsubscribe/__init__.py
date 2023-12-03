@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 import aria2p
 from app.db import get_db
+import time
 
 from app.chain.download import DownloadChain
 from app.core.config import settings
@@ -36,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.5.2"
+    plugin_version = "0.6"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -189,6 +190,7 @@ class JavSubscribe(_PluginBase):
             # 搜索资源
             download_info = None
             try:
+                time.sleep(3)
                 download_info = self.jav115.search_and_download_jav_115(item['id'])
                 if download_info and download_info.url and download_info.headers:
                     logger.info(f"{item['id']} 115离线下载成功，开始下载到本地...")
