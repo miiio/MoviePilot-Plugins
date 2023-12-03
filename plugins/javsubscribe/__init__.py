@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.4"
+    plugin_version = "0.5"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -447,9 +447,8 @@ class JavSubscribe(_PluginBase):
             "clear": False
         }
     
-    @db_query
     def jav_exists_by_javid(self, javid: str):
-        return self.media_server_db.query(MediaServerItem).filter(MediaServerItem.title.like(javid)).first()
+        return self.media_server_db.query(MediaServerItem).filter(MediaServerItem.title.like(f"%{javid}%")).first()
     
     def is_jav(self, title):
         if not title:
