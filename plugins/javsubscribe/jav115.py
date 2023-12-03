@@ -207,7 +207,7 @@ class Jav115:
                     ico_dict[item['ico']] = 1
                     name ="{}.{}".format(new_name, item['ico'])
                 else:
-                    name = "{} ({}).{}".format(new_name, ico_dict[item['ico'], item['ico']])
+                    name = "{} ({}).{}".format(new_name, ico_dict[item['ico']], item['ico'])
                 new_fids.append(item['fid'])
                 new_fnames.append(name)
                 self.storage_115.rename(item['fid'], name)

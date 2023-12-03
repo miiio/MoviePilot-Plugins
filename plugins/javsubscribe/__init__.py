@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.6"
+    plugin_version = "0.6.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
