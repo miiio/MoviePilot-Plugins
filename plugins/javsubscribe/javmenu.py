@@ -25,15 +25,16 @@ class JavMenuWeb(object):
 
     _webparsers = {
         "jav_list": {
-            "list": '//div[@class="card mx-1"]',
+            "list": '//div[contains(@class,"category-page")]/div',
             "item": {
                 "id": "./div/a/h5/text()",
                 "date": './div/a/span[@class="text-muted"]/text()',
-                "title": './div/a/p[@class="card-text text-primary"]/@title',
+                "title": './div/a/p[@class="card-text text-primary"]/text()',
                 "img": './a/div/img/@data-src',
             },
             "format": {
                 "id": lambda x : x.replace(" ",""),
+                "title": lambda x : "" if not x else x.replace("\n", "").strip()
             },
             "filter": {
                 "id": lambda x : is_jav(x)

@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.2.3"
+    plugin_version = "0.3"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -164,7 +164,7 @@ class JavSubscribe(_PluginBase):
                 logger.info(f"获取订阅地址：{addr} ...")
                 addrs_info = self.__get_addrs_info(addr)
                 if not addrs_info or len(addrs_info):
-                    logger.error(f"订阅地址：{addr} ，未查询到数据")
+                    logger.info(f"订阅地址：{addr} ，未查询到数据")
                     continue
                 
                 logger.info(f"订阅地址：{addr} ，共 {len(addrs_info)} 条数据")

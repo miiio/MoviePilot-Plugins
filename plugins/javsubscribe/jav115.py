@@ -36,7 +36,7 @@ class Jav115:
             password=settings.COOKIECLOUD_PASSWORD
         )
         cookies, msg = self.cookiecloud.download()
-        if not msg:
+        if msg != "":
             logger.error("获取115 cookies失败：" + msg)
         cookies_115 = cookies['115.com'] if '115.com' in cookies else ""
         # CID=xxx;SEID=xxx;UID=xxx;USERSESSIONID=xxx;acw_tc=xxx;acw_tc=xxx;acw_tc=xx',
