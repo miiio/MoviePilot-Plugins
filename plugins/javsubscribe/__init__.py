@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.1"
+    plugin_version = "0.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -288,6 +288,9 @@ class JavSubscribe(_PluginBase):
             "custom_addrs": '\n'.join(map(str, self._custom_addrs)),
             "clear": self._clear
         })
+
+    def get_page(self) -> List[dict]:
+        pass
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
         return [
