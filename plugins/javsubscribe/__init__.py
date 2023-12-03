@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.5"
+    plugin_version = "0.5.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -245,6 +245,7 @@ class JavSubscribe(_PluginBase):
             if itemid is not None:
                 logger.info(info['id'] + ' 媒体库中已存在')
                 continue
+            addrs_infos.append(info)
 
         logger.info(f"页面地址：{addr} ，共 {len(addrs_infos)} 条数据")
         return addrs_infos
