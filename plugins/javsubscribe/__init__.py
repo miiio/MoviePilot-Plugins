@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.3.2"
+    plugin_version = "0.3.3"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -445,9 +445,13 @@ class JavSubscribe(_PluginBase):
             "custom_addrs": "",
             "clear": False
         }
-
-    @db_query
+    
     def jav_exists_by_javid(self, javid: str, db: Session = Depends(get_db)):
+        return self._jav_exists_by_javid(javid, db)
+
+    @staticmethod
+    @db_query
+    def _jav_exists_by_javid(db: Session, javid: str):
         return db.query(MediaServerItem).filter(MediaServerItem.title.like(javid)).first()
     
     def is_jav(self, title):
