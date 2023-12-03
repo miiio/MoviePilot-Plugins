@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.3.5"
+    plugin_version = "0.3.6"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -447,7 +447,7 @@ class JavSubscribe(_PluginBase):
         }
     
     def jav_exists_by_javid(self, javid: str, db: Session = Depends(get_db)):
-        return self._jav_exists_by_javid(javid, db)
+        return self._jav_exists_by_javid(db, javid)
 
     @staticmethod
     @db_query
