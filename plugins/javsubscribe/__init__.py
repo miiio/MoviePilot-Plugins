@@ -36,7 +36,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.5.1"
+    plugin_version = "0.5.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -163,7 +163,7 @@ class JavSubscribe(_PluginBase):
             try:
                 logger.info(f"获取订阅地址：{addr} ...")
                 addrs_info = self.__get_addrs_info(addr)
-                if not addrs_info or len(addrs_info):
+                if not addrs_info or len(addrs_info) == 0:
                     logger.info(f"订阅地址：{addr} ，未查询到数据")
                     continue
                 
@@ -180,7 +180,7 @@ class JavSubscribe(_PluginBase):
             # 处理每一个番号
             if self._vote > 0:
                 javlib_info = self.javlibWeb.detail_by_javid(item['id'])
-                if javlib_info.get('rating', -1) < self._vote:
+                if not javlib_info or javlib_info.get('rating', -1) < self._vote:
                     wait_download_queue.remove(item)
                     history.append(item)
                     logger.info(item['id'] + ' javlib评分：' + javlib_info.get('rating', 0) + " 不满足条件")
@@ -193,7 +193,7 @@ class JavSubscribe(_PluginBase):
                 if download_info and download_info.url and download_info.headers:
                     logger.info(f"{item['id']} 115离线下载成功，开始下载到本地...")
                     # 提交下载 aria2
-                    download_headers = download_info.headers
+                    download_headers = '\r\n'.join([f'{key}: {value}' for key, value in download_info.headers.items()])
                     aria2_download_info = self.aria2.add_uris([download_info.url], options={'header': download_headers})
                     if not aria2_download_info or not aria2_download_info.name:
                         logger.error("[aria2] aria2下载任务提交异常")
@@ -201,6 +201,7 @@ class JavSubscribe(_PluginBase):
                         logger.info(f"{item['id']} 下载任务创建成功: {aria2_download_info.name}")
                     wait_download_queue.remove(item)
                     history.append(item)
+                    logger.info(f"{item['id']} 处理完成")
                 else:
                     logger.info(f"{item['id']} 搜索&下载失败")
             except e:
