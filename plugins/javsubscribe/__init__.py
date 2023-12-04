@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.7.1"
+    plugin_version = "0.8"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -139,13 +139,13 @@ class JavSubscribe(_PluginBase):
     def _get_current_downloading_count(self):
         count = 0
         for item in self.aria2.get_downloads():
-            if not item.is_active(): continue
+            if not item.is_active: continue
             def _check(item: aria2p.Download):
                 for file in item.files:
                     for uri in file.uris:
                         if uri['uri'] and "115.com" in uri['uri']:
-                            return 1
-                return 0
+                            return True
+                return False
             count += 1 if _check(item) else 0
         return count
     
@@ -330,10 +330,10 @@ class JavSubscribe(_PluginBase):
             ]
         # 拼装页面
         contents = []
-        for list_item in [historys, wait_download_queue]:
+        for list_item in [wait_download_queue, historys]:
             content = []
             for item in list_item:
-                title = item.get("title")
+                title = item.get("title") if len(item.get("title")) <= 28 else item.get("title")[:28] + "..."
                 poster = item.get("img")
                 id = item.get("id")
                 date = item.get("date")
@@ -354,9 +354,9 @@ class JavSubscribe(_PluginBase):
                                             'component': 'VImg',
                                             'props': {
                                                 'src': poster,
-                                                'height': 120,
-                                                'width': 80,
-                                                'aspect-ratio': '2/3',
+                                                'height': 111,
+                                                'width': 73,
+                                                'aspect-ratio': '7/11',
                                                 'class': 'object-cover shadow ring-gray-500',
                                                 'cover': True
                                             }
@@ -404,22 +404,64 @@ class JavSubscribe(_PluginBase):
                 }
             )
             contents.append(content)
+        
+        
         return [
             {
-                'component': 'div',
-                'props': {
-                    'class': 'grid gap-3 grid-info-card',
-                },
-                'content': contents[0]
+                'component': 'VCard',
+                'content': [
+                    {
+                        'component': 'VTabs',
+                        'props': {'v-model': 'tab'},
+                        'content': [
+                            {
+                                'component': 'VTab',
+                                'props': {'value': 'wait_queue'},
+                                'content': '待刷新'
+                            },
+                            {
+                                'component': 'VTab',
+                                'props': {'value': 'history'},
+                                'content': '已完成'
+                            }
+                        ]
+                    },
+                    {
+                        'component': 'VWindow',
+                        'props': {'v-model': 'tab'},
+                        'content':[
+                            {
+                                'component': 'VWindowItem',
+                                'props': {'value': 'wait_queue'},
+                                'content': contents[0]
+                            },
+                            {
+                                'component': 'VWindowItem',
+                                'props': {'value': 'history'},
+                                'content': contents[1]
+                            }
+                        ]
+                    }
+                ]
             },
-            {
-                'component': 'div',
-                'props': {
-                    'class': 'grid gap-3 grid-info-card',
-                },
-                'content': contents[1]
-            }
         ]
+
+        # return [
+        #     {
+        #         'component': 'div',
+        #         'props': {
+        #             'class': 'grid gap-3 grid-info-card',
+        #         },
+        #         'content': contents[0]
+        #     },
+        #     {
+        #         'component': 'div',
+        #         'props': {
+        #             'class': 'grid gap-3 grid-info-card',
+        #         },
+        #         'content': contents[1]
+        #     }
+        # ]
 
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
