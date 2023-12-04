@@ -33,11 +33,11 @@ class JavSubscribe(_PluginBase):
     # 插件名称
     plugin_name = "Jav订阅"
     # 插件描述
-    plugin_desc = "监控指定Jav页面，自动通过M-Team搜索下载"
+    plugin_desc = "监控指定Jav页面，自动离线到115并通过aria2下载到本地"
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.6.2"
+    plugin_version = "0.7"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -68,6 +68,7 @@ class JavSubscribe(_PluginBase):
     _aria2_port = 6802
     _aria2_secret = "3515"
     _searching = False
+    _115_max_downloading_num = 5
 
     def init_plugin(self, config: dict = None):
         self.media_server_db = get_db().__next__()
@@ -105,7 +106,6 @@ class JavSubscribe(_PluginBase):
             self._scheduler = BackgroundScheduler(timezone=settings.TZ)
             if self._cron:
                 logger.info(f"Jav订阅服务启动，周期：{self._cron}")
-                
                 try:
                     self._scheduler.add_job(func=self.__refresh_subscribe,
                                             trigger=CronTrigger.from_crontab(self._cron),
@@ -136,6 +136,19 @@ class JavSubscribe(_PluginBase):
                 self._scheduler.print_jobs()
                 self._scheduler.start()
 
+    def _get_current_downloading_count(self):
+        count = 0
+        for item in self.aria2.get_downloads():
+            if not item.is_active(): continue
+            def _check(item: aria2p.Download):
+                for file in item.files:
+                    for uri in file.uris:
+                        if uri['uri'] and "115.com" in uri['uri']:
+                            return 1
+                return 0
+            count += 1 if _check(item) else 0
+        return count
+    
     def __refresh_subscribe(self):
         if self._searching:
             logger.warn(f"当前有任务尚未结束，取消刷新...")
@@ -176,8 +189,8 @@ class JavSubscribe(_PluginBase):
         self.jav115 = Jav115()
         logger.info(f"开始处理待下载任务...")
         for item in wait_download_queue[:]:
-            count = len(self.aria2.get_downloads())
-            if count >= 5:
+            count = self._get_current_downloading_count()
+            if count >= self._115_max_downloading_num:
                 logger.info(f"当前下载任务数：{count}，结束订阅刷新任务.")
                 break
                 
@@ -297,8 +310,117 @@ class JavSubscribe(_PluginBase):
             "clear": self._clear
         })
 
+    
     def get_page(self) -> List[dict]:
-        pass
+        """
+        拼装插件详情页面，需要返回页面配置，同时附带数据
+        """
+        # 查询历史记录
+        historys = self.get_data('history')
+        wait_download_queue = self.get_data('wait_download_queue')
+        if not historys and not wait_download_queue:
+            return [
+                {
+                    'component': 'div',
+                    'text': '暂无数据',
+                    'props': {
+                        'class': 'text-center',
+                    }
+                }
+            ]
+        # 拼装页面
+        contents = []
+        for list_item in [historys, wait_download_queue]:
+            content = []
+            for item in list_item:
+                title = item.get("title")
+                poster = item.get("img")
+                id = item.get("id")
+                date = item.get("date")
+                contents.append(
+                {
+                    'component': 'VCard',
+                    'content': [
+                        {
+                            'component': 'div',
+                            'props': {
+                                'class': 'd-flex justify-space-start flex-nowrap flex-row',
+                            },
+                            'content': [
+                                {
+                                    'component': 'div',
+                                    'content': [
+                                        {
+                                            'component': 'VImg',
+                                            'props': {
+                                                'src': poster,
+                                                'height': 120,
+                                                'width': 80,
+                                                'aspect-ratio': '2/3',
+                                                'class': 'object-cover shadow ring-gray-500',
+                                                'cover': True
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    'component': 'div',
+                                    'content': [
+                                        {
+                                            'component': 'VCardSubtitle',
+                                            'props': {
+                                                'class': 'pa-2 font-bold break-words whitespace-break-spaces'
+                                            },
+                                            'content': [
+                                                {
+                                                    'component': 'a',
+                                                    'props': {
+                                                        'href': f"https://javmenu.com/zh/{id}",
+                                                        'target': '_blank'
+                                                    },
+                                                    'text': title
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            'component': 'VCardText',
+                                            'props': {
+                                                'class': 'pa-0 px-2'
+                                            },
+                                            'text': f'番号：{id}'
+                                        },
+                                        {
+                                            'component': 'VCardText',
+                                            'props': {
+                                                'class': 'pa-0 px-2'
+                                            },
+                                            'text': f'发行时间：{date}'
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            )
+            contents.append(content)
+        return [
+            {
+                'component': 'div',
+                'props': {
+                    'class': 'grid gap-3 grid-info-card',
+                },
+                'content': contents[0]
+            },
+            {
+                'component': 'div',
+                'props': {
+                    'class': 'grid gap-3 grid-info-card',
+                },
+                'content': contents[1]
+            }
+        ]
+
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
         return [
