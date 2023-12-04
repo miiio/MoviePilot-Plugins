@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.8.1"
+    plugin_version = "0.8.2"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -333,7 +333,7 @@ class JavSubscribe(_PluginBase):
         for list_item in [wait_download_queue, historys]:
             content = []
             for item in list_item:
-                title = item.get("title") if len(item.get("title")) <= 28 else item.get("title")[:28] + "..."
+                title = item.get("title") if len(item.get("title")) <= 8 else item.get("title")[:8] + "..."
                 poster = item.get("img")
                 id = item.get("id")
                 date = item.get("date")
@@ -453,16 +453,6 @@ class JavSubscribe(_PluginBase):
                     'class': 'grid gap-3 grid-info-card',
                 },
                 'content': contents[0]
-            },
-            {
-                'component': 'VDivider'
-            },
-            {
-                'component': 'div',
-                'props': {
-                    'class': 'grid gap-3 grid-info-card',
-                },
-                'content': contents[1]
             }
         ]
 
