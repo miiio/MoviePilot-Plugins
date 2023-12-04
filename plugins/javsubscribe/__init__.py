@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.7"
+    plugin_version = "0.7.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -337,7 +337,7 @@ class JavSubscribe(_PluginBase):
                 poster = item.get("img")
                 id = item.get("id")
                 date = item.get("date")
-                contents.append(
+                content.append(
                 {
                     'component': 'VCard',
                     'content': [
