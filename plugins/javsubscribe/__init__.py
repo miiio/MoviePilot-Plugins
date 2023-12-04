@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.8"
+    plugin_version = "0.8.1"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -354,9 +354,9 @@ class JavSubscribe(_PluginBase):
                                             'component': 'VImg',
                                             'props': {
                                                 'src': poster,
-                                                'height': 111,
-                                                'width': 73,
-                                                'aspect-ratio': '7/11',
+                                                'height': 73,
+                                                'width': 111,
+                                                'aspect-ratio': '11/7',
                                                 'class': 'object-cover shadow ring-gray-500',
                                                 'cover': True
                                             }
@@ -406,62 +406,65 @@ class JavSubscribe(_PluginBase):
             contents.append(content)
         
         
-        return [
-            {
-                'component': 'VCard',
-                'content': [
-                    {
-                        'component': 'VTabs',
-                        'props': {'v-model': 'tab'},
-                        'content': [
-                            {
-                                'component': 'VTab',
-                                'props': {'value': 'wait_queue'},
-                                'content': '待刷新'
-                            },
-                            {
-                                'component': 'VTab',
-                                'props': {'value': 'history'},
-                                'content': '已完成'
-                            }
-                        ]
-                    },
-                    {
-                        'component': 'VWindow',
-                        'props': {'v-model': 'tab'},
-                        'content':[
-                            {
-                                'component': 'VWindowItem',
-                                'props': {'value': 'wait_queue'},
-                                'content': contents[0]
-                            },
-                            {
-                                'component': 'VWindowItem',
-                                'props': {'value': 'history'},
-                                'content': contents[1]
-                            }
-                        ]
-                    }
-                ]
-            },
-        ]
-
         # return [
         #     {
-        #         'component': 'div',
-        #         'props': {
-        #             'class': 'grid gap-3 grid-info-card',
-        #         },
-        #         'content': contents[0]
+        #         'component': 'VCard',
+        #         'content': [
+        #             {
+        #                 'component': 'VTabs',
+        #                 'props': {'v-model': 'tab'},
+        #                 'content': [
+        #                     {
+        #                         'component': 'VTab',
+        #                         'props': {'value': 'wait_queue'},
+        #                         'content': '待刷新'
+        #                     },
+        #                     {
+        #                         'component': 'VTab',
+        #                         'props': {'value': 'history'},
+        #                         'content': '已完成'
+        #                     }
+        #                 ]
+        #             },
+        #             {
+        #                 'component': 'VWindow',
+        #                 'props': {'v-model': 'tab'},
+        #                 'content':[
+        #                     {
+        #                         'component': 'VWindowItem',
+        #                         'props': {'value': 'wait_queue'},
+        #                         'content': contents[0]
+        #                     },
+        #                     {
+        #                         'component': 'VWindowItem',
+        #                         'props': {'value': 'history'},
+        #                         'content': contents[1]
+        #                     }
+        #                 ]
+        #             }
+        #         ]
         #     },
-        #     {
-        #         'component': 'div',
-        #         'props': {
-        #             'class': 'grid gap-3 grid-info-card',
-        #         },
-        #         'content': contents[1]
-        #     }
         # ]
+
+        return [
+            {
+                'component': 'div',
+                'props': {
+                    'class': 'grid gap-3 grid-info-card',
+                },
+                'content': contents[0]
+            },
+            {
+                'component': 'VDivider'
+            },
+            {
+                'component': 'div',
+                'props': {
+                    'class': 'grid gap-3 grid-info-card',
+                },
+                'content': contents[1]
+            }
+        ]
 
 
     def get_form(self) -> Tuple[List[dict], Dict[str, Any]]:
