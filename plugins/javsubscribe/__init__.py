@@ -37,7 +37,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.8.2"
+    plugin_version = "0.8.3"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -186,6 +186,11 @@ class JavSubscribe(_PluginBase):
             except Exception as e:
                 logger.error(str(e))
 
+        # 去重
+        unique_dict = {item['id']: item for item in wait_download_queue}
+        # 获取去重后的列表
+        wait_download_queue = list(unique_dict.values())
+
         self.jav115 = Jav115()
         logger.info(f"开始处理待下载任务...")
         for item in wait_download_queue[:]:
@@ -267,7 +272,6 @@ class JavSubscribe(_PluginBase):
                 logger.info(info['id'] + ' 媒体库中已存在')
                 continue
             addrs_infos.append(info)
-
         logger.info(f"页面地址：{addr} ，共 {len(addrs_infos)} 条数据")
         return addrs_infos
 
