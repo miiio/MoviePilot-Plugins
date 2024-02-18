@@ -70,7 +70,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "2.2"
+    plugin_version = "2.3"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -1109,7 +1109,7 @@ class JavDirMonitor(_PluginBase):
             return t
         
     def is_jav_chinese(self, title):
-        return '字幕' in title or '-c' in title or '-C' in title
+        return '字幕' in title or '中文' in title or '-c' in title or '-C' in title or '-UC' in title
 
     def JavMetaInfo(self, title: str, subtitle: str = None) -> MetaBase:
         """
