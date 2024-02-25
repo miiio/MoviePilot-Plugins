@@ -38,7 +38,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.8.6"
+    plugin_version = "0.8.7"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -176,7 +176,7 @@ class JavSubscribe(_PluginBase):
         
         # 清理已存在的数据
         exits_jav_list = [item['id'] for item in wait_download_queue if self.jav_exists_by_javid(item['id'])]
-        logger.info(f"清理媒体库中已存在数据：" + ",".join(exits_jav_list)")
+        logger.info(f"清理媒体库中已存在数据：" + ",".join(exits_jav_list))
         wait_download_queue = [item for item in wait_download_queue if item['id'] not in exits_jav_list]
 
         for addr in addr_list:
