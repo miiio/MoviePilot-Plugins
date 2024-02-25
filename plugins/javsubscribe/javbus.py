@@ -142,7 +142,10 @@ class JavbusWeb(object):
     
     @classmethod
     def __invoke_web(cls, url, params=(), cookies='', headers={}):
-        req_url = cls._weburls.get(url)
+        if url in cls._weburls:
+            req_url = cls._weburls.get(url)
+        else:
+            req_url = url
         if not req_url:
             return None
         if "user-agent" not in headers:
@@ -300,6 +303,20 @@ class JavbusWeb(object):
         movies = cls.__get_list("search_movies", doc)
         pagination = cls.__get_list('search_pagination', doc)
         return {'movies': movies if movies else [], 'pagination': pagination, "actor_id": aid}
+    
+    @classmethod
+    def page_jav_list(cls, url):
+        """
+        列表页面
+        """
+        magnet = True
+        if "#all" in url:
+            url = url.replace("#all", "")
+            magnet = False
+        doc = cls.__invoke_web(url, headers={"cookie": "existmag={}".format("mag" if magnet else "all")})
+        movies = cls.__get_list("search_movies", doc)
+        pagination = cls.__get_list('search_pagination', doc)
+        return {'jav_list': movies if movies else [], 'pagination': pagination, "url": url}
         
     def __bytes(size):
         # 'b' | 'gb' | 'kb' | 'mb' | 'pb' | 'tb' | 'B' | 'GB' | 'KB' | 'MB' | 'PB' | 'TB'

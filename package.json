@@ -10,7 +10,7 @@
     "JavSubscribe": {
         "name": "Jav订阅",
         "description": "监控指定Jav页面，自动离线到115并通过aria2下载到本地",
-        "version": "0.8.3",
+        "version": "0.8.5",
         "icon": "movie.png",
         "author": "boji",
         "level": 2

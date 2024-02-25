@@ -28,6 +28,7 @@ from app.db.models.site import Site
 from .javmenu import JavMenuWeb
 from .javlib import JavlibWeb
 from .jav115 import Jav115
+from .javbus import JavbusWeb
 
 class JavSubscribe(_PluginBase):
     # 插件名称
@@ -37,7 +38,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.8.3"
+    plugin_version = "0.8.5"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -62,6 +63,7 @@ class JavSubscribe(_PluginBase):
     _custom_addrs = []
     _ranks = []
     _vote = 0
+    _auto_download = False
     _clear = False
     _clearflag = False
     _aria2_host = "http://192.168.1.10"
@@ -87,6 +89,7 @@ class JavSubscribe(_PluginBase):
             self._cron = config.get("cron")
             self._onlyonce = config.get("onlyonce")
             self._vote = float(config.get("vote")) if config.get("vote") else 0
+            self._auto_download = config.get("_auto_download")
             custom_addrs = config.get("custom_addrs")
             if custom_addrs:
                 if isinstance(custom_addrs, str):
@@ -171,12 +174,17 @@ class JavSubscribe(_PluginBase):
             wait_download_queue: List[dict] = self.get_data('wait_download_queue') or []
             history: List[dict] = self.get_data('history') or []
         
+        # 清理已存在的数据
+        exits_jav_list = [item['id'] for item in wait_download_queue if self.jav_exists_by_javid(item['id'])]
+        logger.info(f"清理媒体库中已存在数据：{",".join(exits_jav_list)}")
+        wait_download_queue = [item for item in wait_download_queue if item['id'] not in exits_jav_list]
+
         for addr in addr_list:
             if not addr:
                 continue
             try:
                 logger.info(f"获取订阅地址：{addr} ...")
-                addrs_info = self.__get_addrs_info(addr)
+                addrs_info = self.__get_addrs_info(addr, history, wait_download_queue)
                 if not addrs_info or len(addrs_info) == 0:
                     logger.info(f"订阅地址：{addr} ，未查询到数据")
                     continue
@@ -190,49 +198,51 @@ class JavSubscribe(_PluginBase):
         unique_dict = {item['id']: item for item in wait_download_queue}
         # 获取去重后的列表
         wait_download_queue = list(unique_dict.values())
+        
+        logger.info(f"当前待处理共 {len(wait_download_queue)} 条数据")
 
-        self.jav115 = Jav115()
-        logger.info(f"开始处理待下载任务...")
-        for item in wait_download_queue[:]:
-            count = self._get_current_downloading_count()
-            if count >= self._115_max_downloading_num:
-                logger.info(f"当前下载任务数：{count}，结束订阅刷新任务.")
-                break
+        if self._auto_download:
+            self.jav115 = Jav115()
+            logger.info(f"开始处理待下载任务...")
+            for item in wait_download_queue[:]:
+                count = self._get_current_downloading_count()
+                if count >= self._115_max_downloading_num:
+                    logger.info(f"当前下载任务数：{count}，结束订阅刷新任务.")
+                    break
+                    
+                javid = item['id']
+                if not javid or not self.is_jav(javid): continue
+                # 处理每一个番号
+                if self._vote > 0:
+                    javlib_info = self.javlibWeb.detail_by_javid(item['id'])
+                    if not javlib_info or javlib_info.get('rating', -1) < self._vote:
+                        wait_download_queue.remove(item)
+                        history.append(item)
+                        logger.info(item['id'] + ' javlib评分：' + javlib_info.get('rating', 0) + " 不满足条件")
+                        continue
                 
-            javid = item['id']
-            if not javid or not self.is_jav(javid): continue
-            # 处理每一个番号
-            if self._vote > 0:
-                javlib_info = self.javlibWeb.detail_by_javid(item['id'])
-                if not javlib_info or javlib_info.get('rating', -1) < self._vote:
-                    wait_download_queue.remove(item)
-                    history.append(item)
-                    logger.info(item['id'] + ' javlib评分：' + javlib_info.get('rating', 0) + " 不满足条件")
-                    continue
-            
-            # 搜索资源
-            download_info = None
-            try:
-                time.sleep(3)
-                download_info = self.jav115.search_and_download_jav_115(item['id'])
-                if download_info and download_info.url and download_info.headers:
-                    logger.info(f"{item['id']} 115离线下载成功，开始下载到本地...")
-                    # 提交下载 aria2
-                    download_headers = '\r\n'.join([f'{key}: {value}' for key, value in download_info.headers.items()])
-                    aria2_download_info = self.aria2.add_uris([download_info.url], options={'header': download_headers})
-                    if not aria2_download_info or not aria2_download_info.name:
-                        logger.error("[aria2] aria2下载任务提交异常")
+                # 搜索资源
+                download_info = None
+                try:
+                    time.sleep(3)
+                    download_info = self.jav115.search_and_download_jav_115(item['id'])
+                    if download_info and download_info.url and download_info.headers:
+                        logger.info(f"{item['id']} 115离线下载成功，开始下载到本地...")
+                        # 提交下载 aria2
+                        download_headers = '\r\n'.join([f'{key}: {value}' for key, value in download_info.headers.items()])
+                        aria2_download_info = self.aria2.add_uris([download_info.url], options={'header': download_headers})
+                        if not aria2_download_info or not aria2_download_info.name:
+                            logger.error("[aria2] aria2下载任务提交异常")
+                        else:
+                            logger.info(f"{item['id']} 下载任务创建成功: {aria2_download_info.name}")
+                        wait_download_queue.remove(item)
+                        history.append(item)
+                        logger.info(f"{item['id']} 处理完成")
                     else:
-                        logger.info(f"{item['id']} 下载任务创建成功: {aria2_download_info.name}")
-                    wait_download_queue.remove(item)
-                    history.append(item)
-                    logger.info(f"{item['id']} 处理完成")
-                else:
+                        logger.info(f"{item['id']} 搜索&下载失败")
+                except e:
+                    logger.error(str(e))
                     logger.info(f"{item['id']} 搜索&下载失败")
-            except e:
-                logger.error(str(e))
-                logger.info(f"{item['id']} 搜索&下载失败")
-
 
         # 保存历史记录
         self.save_data('wait_download_queue', wait_download_queue)
@@ -242,20 +252,14 @@ class JavSubscribe(_PluginBase):
         logger.info(f"所有订阅地址刷新完成")
         self._searching = False
     
-    def __get_addrs_info(self, addr) -> List[dict]:
+    def __get_addrs_info(self, addr, history, wait_download_queue) -> List[dict]:
         if not addr: return []
         logger.info(f"获取页面数据：{addr} ...")
         info_list = []
         if "javmenu.com" in addr:
             info_list = JavMenuWeb().page_jav_list(addr)['jav_list']
-
-        # 读取历史记录
-        if self._clearflag:
-            wait_download_queue = []
-            history = []
-        else:
-            wait_download_queue: List[dict] = self.get_data('wait_download_queue') or []
-            history: List[dict] = self.get_data('history') or []
+        elif "javbus" in addr:
+            info_list = JavbusWeb().page_jav_list(addr)['jav_list']
 
         addrs_infos = []
         # 过滤已处理过的
@@ -311,7 +315,8 @@ class JavSubscribe(_PluginBase):
             "vote": self._vote,
             "ranks": self._ranks,
             "custom_addrs": '\n'.join(map(str, self._custom_addrs)),
-            "clear": self._clear
+            "clear": self._clear,
+            "auto_download": self._auto_download,
         })
 
     
@@ -554,7 +559,7 @@ class JavSubscribe(_PluginBase):
                                             'chips': True,
                                             'multiple': True,
                                             'model': 'ranks',
-                                            'label': '预设榜单',
+                                            'label': '预设页面',
                                             'items': [
                                                 {'title': 'JavMenu日榜', 'value': 'https://javmenu.com/zh/rank/censored/day'},
                                                 {'title': 'JavMenu周榜', 'value': 'https://javmenu.com/zh/rank/censored/week'},
