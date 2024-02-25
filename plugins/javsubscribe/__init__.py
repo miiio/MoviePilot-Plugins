@@ -38,7 +38,7 @@ class JavSubscribe(_PluginBase):
     # 插件图标
     plugin_icon = "movie.jpg"
     # 插件版本
-    plugin_version = "0.8.8"
+    plugin_version = "0.8.9"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -260,6 +260,9 @@ class JavSubscribe(_PluginBase):
             info_list = JavMenuWeb().page_jav_list(addr)['jav_list']
         elif "javbus" in addr:
             info_list = JavbusWeb().page_jav_list(addr)['jav_list']
+            for item in info_list:
+                if "img" in item:
+                    item['img'] = item['img'].replace("/pics/thumb/", "/pics/cover/").replace(".jpg", "_b.jpg")
 
         addrs_infos = []
         # 过滤已处理过的
