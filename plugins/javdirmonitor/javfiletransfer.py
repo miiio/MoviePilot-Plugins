@@ -30,6 +30,12 @@ class JavFileTransferModule(_ModuleBase):
     def init_setting(self) -> Tuple[str, Union[str, bool]]:
         pass
 
+    def test(self) -> Tuple[bool, str]:
+        """
+        模块测试, 返回测试结果和错误信息
+        """
+        pass
+    
     def transfer(self, path: Path, meta: MetaBase, mediainfo: MediaInfo, rename_format: str,
                  transfer_type: str, target: Path = None) -> TransferInfo:
         """
