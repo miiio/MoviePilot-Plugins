@@ -30,6 +30,9 @@ class JavFileTransferModule(_ModuleBase):
     def init_setting(self) -> Tuple[str, Union[str, bool]]:
         pass
 
+    def get_name() -> str:
+        return "JavFileTransferModule"
+
     def test(self) -> Tuple[bool, str]:
         """
         模块测试, 返回测试结果和错误信息
