@@ -103,7 +103,7 @@ class JavlibWeb(object):
             return None
         else:
             info = cls.__get_obj("detail_info", html)
-            return info if info['id'] == jav_id or jav_id in info['id'] else None
+            return info if (info is not None and info['id'] is not None and (info['id'] == jav_id or jav_id in info['id'])) else None
     
     @classmethod
     def detail(cls, vid):
