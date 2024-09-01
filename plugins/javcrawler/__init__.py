@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.5"
+    plugin_version = "0.0.6"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -640,13 +640,13 @@ class JavCrawler(_PluginBase):
 
     def __add_crawl_history(self, time, source, info):
         history = self.get_data("crawl_history")
-        if history is None: history = []
+        if history is None: history = list()
         history.append({
             "time": time,
             "source": source,
             "info": info
         })
-        sorted(history, key=lambda x: x["time"], reverse=True)
+        history = sorted(history, key=lambda x: x["time"], reverse=True)
         self.save_data("crawl_history", history)
 
     def stop_service(self):
