@@ -16,9 +16,9 @@
         "level": 2
     },
     "JavScraper": {
-        "name": "Jav数据抓取器",
+        "name": "Jav爬虫",
         "description": "自动抓取Jav数据",
-        "version": "0.0.8",
+        "version": "0.0.1",
         "icon": "statistic.png",
         "author": "miiio",
         "level": 1

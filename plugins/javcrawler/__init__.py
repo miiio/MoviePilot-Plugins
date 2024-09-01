@@ -22,21 +22,21 @@ from .javranking import JavRanking
 
 from .javmenu import JavMenuWeb
 
-class Javscraper(_PluginBase):
+class Javcrawler(_PluginBase):
     # 插件名称
-    plugin_name = "Jav数据抓取器"
+    plugin_name = "Jav爬虫"
     # 插件描述
     plugin_desc = "自动抓取Jav数据"
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.8"
+    plugin_version = "0.0.1"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
     author_url = "https://github.com/miiio"
     # 插件配置项ID前缀
-    plugin_config_prefix = "jav_scraper_"
+    plugin_config_prefix = "jav_crawler_"
     # 加载顺序
     plugin_order = 4
     # 可使用的用户级别
@@ -96,7 +96,7 @@ class Javscraper(_PluginBase):
                 # 定时服务
                 self._scheduler = BackgroundScheduler(timezone=settings.TZ)
                 logger.info("Jav数据抓取服务启动，立即运行一次")
-                self._scheduler.add_job(func=self.scraper, trigger='date',
+                self._scheduler.add_job(func=self.crawler, trigger='date',
                                         run_date=datetime.now(tz=pytz.timezone(settings.TZ)) + timedelta(seconds=3),
                                         name="Jav数据抓取")
 
@@ -181,10 +181,10 @@ class Javscraper(_PluginBase):
             try:
                 if str(self._cron).strip().count(" ") == 4:
                     return [{
-                        "id": "JavScraper",
+                        "id": "Javcrawler",
                         "name": "Jav数据抓取",
                         "trigger": CronTrigger.from_crontab(self._cron),
-                        "func": self.scraper,
+                        "func": self.crawler,
                         "kwargs": {}
                     }]
                 else:
@@ -202,10 +202,10 @@ class Javscraper(_PluginBase):
                             self._end_time = int(times[1])
                         if self._start_time and self._end_time:
                             return [{
-                                "id": "JavScraper",
+                                "id": "Javcrawler",
                                 "name": "Jav数据抓取",
                                 "trigger": "interval",
-                                "func": self.scraper,
+                                "func": self.crawler,
                                 "kwargs": {
                                     "hours": float(str(cron).strip()),
                                 }
@@ -215,10 +215,10 @@ class Javscraper(_PluginBase):
                     else:
                         # 默认0-24 按照周期运行
                         return [{
-                            "id": "JavScraper",
+                            "id": "Javcrawler",
                             "name": "Jav数据抓取",
                             "trigger": "interval",
-                            "func": self.scraper,
+                            "func": self.crawler,
                             "kwargs": {
                                 "hours": float(str(self._cron).strip()),
                             }
@@ -235,10 +235,10 @@ class Javscraper(_PluginBase):
             ret_jobs = []
             for trigger in triggers:
                 ret_jobs.append({
-                    "id": f"JavScraper|{trigger.hour}:{trigger.minute}",
+                    "id": f"Javcrawler|{trigger.hour}:{trigger.minute}",
                     "name": "Jav数据抓取",
                     "trigger": "cron",
-                    "func": self.scraper,
+                    "func": self.crawler,
                     "kwargs": {
                         "hour": trigger.hour,
                         "minute": trigger.minute
@@ -442,53 +442,6 @@ class Javscraper(_PluginBase):
                             }
                         ]
                     },
-                    
-                    # {
-                    #     'component': 'VRow',
-                    #     'content': [
-                    #         {
-                    #             'component': 'VCol',
-                    #             'props': {
-                    #                 'cols': 12,
-                    #             },
-                    #             'content': [
-                    #                 {
-                    #                     'component': 'VAlert',
-                    #                     'props': {
-                    #                         'type': 'info',
-                    #                         'variant': 'tonal',
-                    #                         'text': '执行周期支持：'
-                    #                                 '1、5位cron表达式；'
-                    #                                 '2、配置间隔（小时），如2.3/9-23（9-23点之间每隔2.3小时执行一次）；'
-                    #                                 '3、周期不填默认9-23点随机执行2次。'
-                    #                                 '每天首次全量执行，其余执行命中重试关键词的站点。'
-                    #                     }
-                    #                 }
-                    #             ]
-                    #         }
-                    #     ]
-                    # },
-                    # {
-                    #     'component': 'VRow',
-                    #     'content': [
-                    #         {
-                    #             'component': 'VCol',
-                    #             'props': {
-                    #                 'cols': 12,
-                    #             },
-                    #             'content': [
-                    #                 {
-                    #                     'component': 'VAlert',
-                    #                     'props': {
-                    #                         'type': 'info',
-                    #                         'variant': 'tonal',
-                    #                         'text': '自动优选：0-关闭，命中重试关键词次数大于该数量时自动执行Cloudflare IP优选（需要开启且则正确配置Cloudflare IP优选插件和自定义Hosts插件）'
-                    #                     }
-                    #                 }
-                    #             ]
-                    #         }
-                    #     ]
-                    # }
                 ]
             }
         ], {
@@ -508,8 +461,8 @@ class Javscraper(_PluginBase):
         """
         拼装插件详情页面，需要返回页面配置，同时附带数据
         """
-        scrape_data = self.get_data("scrape_history")
-        if scrape_data:
+        crawl_data = self.get_data("crawl_history")
+        if crawl_data:
             contents = [
                 {
                     'component': 'tr',
@@ -533,7 +486,7 @@ class Javscraper(_PluginBase):
                             'text': data.get("info")
                         }
                     ]
-                } for data in scrape_data
+                } for data in crawl_data
             ]
         else:
             contents = [
@@ -595,7 +548,7 @@ class Javscraper(_PluginBase):
             }
         ]
 
-    def scraper(self):
+    def crawler(self):
         """
         开始抓取jav数据
         """
@@ -607,7 +560,7 @@ class Javscraper(_PluginBase):
                 logger.error(
                     f"当前时间 {int(datetime.today().hour)} 不在 {self._start_time}-{self._end_time} 范围内，暂不执行任务")
                 return
-        logger.info("[JavScraper]开始连接mysql数据库 ...")
+        logger.info("[JavCrawler]开始连接mysql数据库 ...")
         
         try:
             self._cnx = mysql.connector.connect(
@@ -619,45 +572,43 @@ class Javscraper(_PluginBase):
             )
         except Exception as e:
             self._cnx = None
-            logger.error("[JavScraper]连接mysql数据库失败 ...")
+            logger.error("[JavCrawler]连接mysql数据库失败 ...")
             return
 
-        logger.info("[JavScraper]开始执行Jav数据抓取 ...")
+        logger.info("[JavCrawler]开始执行Jav数据抓取 ...")
 
         if self._rank_list:
-            self.__do_scrape_rank_list(rank_list=self._rank_list)
+            self.__do_crawl_rank_list(rank_list=self._rank_list)
 
         
-        logger.info("[JavScraper]断开mysql数据库 ...")
+        logger.info("[JavCrawler]断开mysql数据库 ...")
         if self._cnx:
             self._cnx.close()
 
 
-    def __do_scrape_rank_list(self, rank_list):
+    def __do_crawl_rank_list(self, rank_list):
         for rank in rank_list:
             if rank == self.rank_list_javmenu_censored_day:
-                self.__do_scrape_javmenu_rank(rank_type="censored", period="day")
+                self.__do_crawl_javmenu_rank(rank_type="censored", period="day")
 
-        pass
-
-    def __do_scrape_javmenu_rank(self, rank_type: str, period: str):
-        logger.info("[JavScraper][javmenu]开始抓取JavMenu有码日榜 ...")
+    def __do_crawl_javmenu_rank(self, rank_type: str, period: str):
+        logger.info("[JavCrawler][javmenu]开始抓取JavMenu有码日榜 ...")
 
         ret = self.javmenu.rank_list(type=rank_type, rank_type=period, page=1)
 
         javlist = ret['jav_list']
-        logger.info("[JavScraper][javmenu]JavMenu有码日榜抓取完成，共 %s 条数据" % len(javlist))
-        logger.info("[JavScraper][javmenu]开始写入数据库 ...")
+        logger.info("[JavCrawler][javmenu]JavMenu有码日榜抓取完成，共 %s 条数据" % len(javlist))
+        logger.info("[JavCrawler][javmenu]开始写入数据库 ...")
         for ind, jav in enumerate(javlist):
             javranking = JavRanking(av_number=jav.get("id", ""), av_title=jav.get("title", ""), av_cover=jav.get("img", ""), release_date=self.__format_date(jav.get("title", None)),
                                     is_downloadable=jav.get('is_downloadable', False), has_subtitle=jav.get('has_subtitle', False), ranking=jav.get('rank', 0), 
                                     has_code=rank_type=="censored", rank_type=period, ranking_date=datetime.today(), data_source=self.rank_list_javmenu_censored_day, retrieval_time=datetime.now())
             
             self.__db_insert_javranking(javranking)
-            logger.info("[JavScraper][javmenu]已写入数据库[{}/{}]: {}".format(ind+1, len(javlist), str(javranking)))
+            logger.info("[JavCrawler][javmenu]已写入数据库[{}/{}]: {}".format(ind+1, len(javlist), str(javranking)))
 
-        self.__add_scrape_history(datetime.now, self.rank_list_javmenu_censored_day, "成功抓取 %s 条数据" % len(javlist))
-        logger.info("[JavScraper][javmenu]JavMenu有码日榜抓取任务结束")
+        self.__add_crawl_history(datetime.now, self.rank_list_javmenu_censored_day, "成功抓取 %s 条数据" % len(javlist))
+        logger.info("[JavCrawler][javmenu]JavMenu有码日榜抓取任务结束")
             
 
     def __db_insert_javranking(self, jav_ranking: JavRanking):
@@ -687,8 +638,8 @@ class Javscraper(_PluginBase):
         date_object = datetime.strptime(date_str, date_format).date()
         return date_object 
 
-    def __add_scrape_history(self, time, source, info):
-        history = self.get_data("scrape_history")
+    def __add_crawl_history(self, time, source, info):
+        history = self.get_data("crawl_history")
         if history is None: history = []
         history.append({
             "time": time,
