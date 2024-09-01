@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.3"
+    plugin_version = "0.0.4"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -602,7 +602,7 @@ class JavCrawler(_PluginBase):
         for ind, jav in enumerate(javlist):
             javranking = JavRanking(av_number=jav.get("id", ""), av_title=jav.get("title", ""), av_cover=jav.get("img", ""), release_date=self.__format_date(jav.get("date", None)),
                                     is_downloadable=jav.get('is_downloadable', False), has_subtitle=jav.get('has_subtitle', False), ranking=jav.get('ranking', 0), 
-                                    has_code=rank_type=="censored", rank_type=period, ranking_date=datetime.today(), data_source=self.rank_list_javmenu_censored_day, retrieval_time=datetime.now())
+                                    has_code=rank_type=="censored", ranking_type=period, ranking_date=datetime.today(), data_source=self.rank_list_javmenu_censored_day, retrieval_time=datetime.now())
             
             self.__db_insert_javranking(javranking)
             logger.info("[JavCrawler][javmenu]已写入数据库[{}/{}]: {}".format(ind+1, len(javlist), str(javranking)))
