@@ -30,7 +30,7 @@ class Javscraper(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.6"
+    plugin_version = "0.0.7"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -136,7 +136,7 @@ class Javscraper(_PluginBase):
         定义远程控制命令
         :return: 命令关键字、事件、描述、附带数据
         """
-        return []
+        pass
         # return [{
         #     "cmd": "/site_signin",
         #     "event": EventType.PluginAction,
@@ -157,7 +157,7 @@ class Javscraper(_PluginBase):
             "summary": "API说明"
         }]
         """
-        return []
+        pass
         # return [{
         #     "path": "/signin_by_domain",
         #     "endpoint": self.signin_by_domain,
