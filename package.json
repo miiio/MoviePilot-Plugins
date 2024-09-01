@@ -18,9 +18,9 @@
     "JavScraper": {
         "name": "Jav数据抓取器",
         "description": "自动抓取Jav数据",
-        "version": "0.0.7",
+        "version": "0.0.8",
         "icon": "statistic.png",
         "author": "miiio",
-        "level": 2
+        "level": 1
     }
 }
