@@ -22,7 +22,7 @@ from .javranking import JavRanking
 
 from .javmenu import JavMenuWeb
 
-class Javcrawler(_PluginBase):
+class JavCrawler(_PluginBase):
     # 插件名称
     plugin_name = "Jav爬虫"
     # 插件描述
@@ -30,7 +30,7 @@ class Javcrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.1"
+    plugin_version = "0.0.2"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
