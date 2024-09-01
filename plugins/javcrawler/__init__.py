@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.9.1"
+    plugin_version = "0.0.9.2"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -624,7 +624,7 @@ class JavCrawler(_PluginBase):
             self.__db_insert_javranking(javranking)
             logger.info("[JavCrawler][javmenu]已写入数据库[{}/{}]: {}".format(ind+1, len(javlist), str(javranking)))
 
-        self.__add_crawl_hisstory(datetime.now(), crawl_source, "成功抓取 %s 条数据" % len(javlist))
+        self.__add_crawl_history(datetime.now(), crawl_source, "成功抓取 %s 条数据" % len(javlist))
         logger.info("[JavCrawler][javmenu]{}抓取任务结束".format(source))
             
 
