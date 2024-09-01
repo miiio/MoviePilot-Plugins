@@ -30,7 +30,7 @@ class Javscraper(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.3"
+    plugin_version = "0.0.4"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -251,9 +251,6 @@ class Javscraper(_PluginBase):
         """
         拼装插件配置页面，需要返回两块数据：1、页面配置；2、数据结构
         """
-        # 站点的可选项（内置站点 + 自定义站点）
-        customSites = self.__custom_sites()
-
         rank_options = ([
             {
                 "title": "JavMenu有码日榜",
