@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.6"
+    plugin_version = "0.0.7"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -625,12 +625,13 @@ class JavCrawler(_PluginBase):
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
         """
-
-        # 执行SQL插入语句
-        cursor.execute(sql, (jav_ranking.av_number, jav_ranking.av_title, jav_ranking.av_cover, jav_ranking.release_date, jav_ranking.is_downloadable, jav_ranking.has_subtitle, jav_ranking.ranking_type, jav_ranking.ranking_date, jav_ranking.ranking, jav_ranking.data_source, jav_ranking.has_code, jav_ranking.retrieval_time))
-
-        # 提交事务
-        self._cnx.commit()
+        try:
+            cursor.execute(sql, (jav_ranking.av_number, jav_ranking.av_title, jav_ranking.av_cover, jav_ranking.release_date, jav_ranking.is_downloadable, jav_ranking.has_subtitle, jav_ranking.ranking_type, jav_ranking.ranking_date, jav_ranking.ranking, jav_ranking.data_source, jav_ranking.has_code, jav_ranking.retrieval_time))
+            self._cnx.commit()
+        except Exception as e:
+            self._cnx.rollback()
+        finally:
+            cursor.close()
 
     def __format_date(self, date_str):
         if date_str is None: return None
@@ -638,13 +639,13 @@ class JavCrawler(_PluginBase):
         date_object = datetime.strptime(date_str, date_format).date()
         return date_object 
 
-    def __add_crawl_history(self, time, source, info):
+    def __add_crawl_history(self, time:datetime, source, info):
         history_data = self.get_data("crawl_history")
         history = []
         if history_data is not None:
             history = history_data
         history.append({
-            "time": time,
+            "time": time.strftime("%Y-%m-%d"),
             "source": source,
             "info": info
         })
