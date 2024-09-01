@@ -18,7 +18,7 @@
     "JavCrawler": {
         "name": "Jav爬虫",
         "description": "自动抓取Jav数据",
-        "version": "0.0.8",
+        "version": "0.0.9",
         "icon": "statistic.png",
         "author": "miiio",
         "level": 1

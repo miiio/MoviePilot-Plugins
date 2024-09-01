@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.8"
+    plugin_version = "0.0.9"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -43,6 +43,8 @@ class JavCrawler(_PluginBase):
     auth_level = 1
 
     rank_list_javmenu_censored_day = "javmenu:censored:day"
+    rank_list_javmenu_censored_week = "javmenu:censored:week"
+    rank_list_javmenu_censored_month = "javmenu:censored:month"
 
     # 事件管理器
     event: EventManager = None
@@ -255,6 +257,14 @@ class JavCrawler(_PluginBase):
             {
                 "title": "JavMenu有码日榜",
                 "value": self.rank_list_javmenu_censored_day
+            },
+            {
+                "title": "JavMenu有码周榜",
+                "value": self.rank_list_javmenu_censored_week
+            },
+            {
+                "title": "JavMenu有码月榜",
+                "value": self.rank_list_javmenu_censored_month
             }
         ])
         
@@ -449,7 +459,7 @@ class JavCrawler(_PluginBase):
             "notify": False,
             "cron": "",
             "onlyonce": False,
-            "rank_list": [self.rank_list_javmenu_censored_day],
+            "rank_list": [self.rank_list_javmenu_censored_day, self.rank_list_javmenu_censored_week, self.rank_list_javmenu_censored_month],
             "ignore_list": "",
             "mysql_host": "",
             "mysql_port": "",
@@ -590,14 +600,19 @@ class JavCrawler(_PluginBase):
         for rank in rank_list:
             if rank == self.rank_list_javmenu_censored_day:
                 self.__do_crawl_javmenu_rank(rank_type="censored", period="day")
+            elif rank == self.rank_list_javmenu_censored_week:
+                self.__do_crawl_javmenu_rank(rank_type="censored", period="week")
+            elif rank == self.rank_list_javmenu_censored_month:
+                self.__do_crawl_javmenu_rank(rank_type="censored", period="month")
 
     def __do_crawl_javmenu_rank(self, rank_type: str, period: str):
-        logger.info("[JavCrawler][javmenu]开始抓取JavMenu有码日榜 ...")
+        source = "JavMenu{}{}".format("有码" if rank_type == "censored" else "无码", "日榜" if period == "day" else ("周榜" if period == "week" else "月榜"))
+        logger.info("[JavCrawler][javmenu]开始抓取{} ...".format(source))
 
         ret = self.javmenu.rank_list(type=rank_type, rank_type=period, page=1)
 
         javlist = ret['jav_list']
-        logger.info("[JavCrawler][javmenu]JavMenu有码日榜抓取完成，共 %s 条数据" % len(javlist))
+        logger.info("[JavCrawler][javmenu]{}抓取完成，共 {} 条数据".format(source, len(javlist)))
         logger.info("[JavCrawler][javmenu]开始写入数据库 ...")
         today = datetime.today()
         nowtime = datetime.now()
@@ -610,7 +625,7 @@ class JavCrawler(_PluginBase):
             logger.info("[JavCrawler][javmenu]已写入数据库[{}/{}]: {}".format(ind+1, len(javlist), str(javranking)))
 
         self.__add_crawl_history(datetime.now(), self.rank_list_javmenu_censored_day, "成功抓取 %s 条数据" % len(javlist))
-        logger.info("[JavCrawler][javmenu]JavMenu有码日榜抓取任务结束")
+        logger.info("[JavCrawler][javmenu]{}抓取任务结束".format(source))
             
 
     def __db_insert_javranking(self, jav_ranking: JavRanking):
@@ -647,7 +662,7 @@ class JavCrawler(_PluginBase):
         if history_data is not None:
             history = history_data
         history.append({
-            "time": time.strftime("%Y-%m-%d"),
+            "time": time.strftime("%Y-%m-%d %H:%M"),
             "source": source,
             "info": info
         })
