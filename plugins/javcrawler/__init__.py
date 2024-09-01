@@ -639,8 +639,10 @@ class JavCrawler(_PluginBase):
         return date_object 
 
     def __add_crawl_history(self, time, source, info):
-        history = self.get_data("crawl_history")
-        if history is None: history = list()
+        history_data = self.get_data("crawl_history")
+        history = []
+        if history_data is not None:
+            history = history_data
         history.append({
             "time": time,
             "source": source,
