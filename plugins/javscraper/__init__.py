@@ -30,7 +30,7 @@ class Javscraper(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.5"
+    plugin_version = "0.0.6"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
