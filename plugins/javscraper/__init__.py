@@ -30,7 +30,7 @@ class Javscraper(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.4"
+    plugin_version = "0.0.5"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -38,9 +38,9 @@ class Javscraper(_PluginBase):
     # 插件配置项ID前缀
     plugin_config_prefix = "jav_scraper_"
     # 加载顺序
-    plugin_order = 0
+    plugin_order = 4
     # 可使用的用户级别
-    auth_level = 2
+    auth_level = 1
 
     rank_list_javmenu_censored_day = "javmenu:censored:day"
 
