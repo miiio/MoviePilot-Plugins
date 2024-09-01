@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.9"
+    plugin_version = "0.0.9.1"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -599,13 +599,13 @@ class JavCrawler(_PluginBase):
     def __do_crawl_rank_list(self, rank_list):
         for rank in rank_list:
             if rank == self.rank_list_javmenu_censored_day:
-                self.__do_crawl_javmenu_rank(rank_type="censored", period="day")
+                self.__do_crawl_javmenu_rank(rank_type="censored", period="day", crawl_source=rank)
             elif rank == self.rank_list_javmenu_censored_week:
-                self.__do_crawl_javmenu_rank(rank_type="censored", period="week")
+                self.__do_crawl_javmenu_rank(rank_type="censored", period="week", crawl_source=rank)
             elif rank == self.rank_list_javmenu_censored_month:
-                self.__do_crawl_javmenu_rank(rank_type="censored", period="month")
+                self.__do_crawl_javmenu_rank(rank_type="censored", period="month", crawl_source=rank)
 
-    def __do_crawl_javmenu_rank(self, rank_type: str, period: str):
+    def __do_crawl_javmenu_rank(self, rank_type: str, period: str, crawl_source: str):
         source = "JavMenu{}{}".format("有码" if rank_type == "censored" else "无码", "日榜" if period == "day" else ("周榜" if period == "week" else "月榜"))
         logger.info("[JavCrawler][javmenu]开始抓取{} ...".format(source))
 
@@ -619,12 +619,12 @@ class JavCrawler(_PluginBase):
         for ind, jav in enumerate(javlist):
             javranking = JavRanking(av_number=jav.get("id", ""), av_title=jav.get("title", ""), av_cover=jav.get("img", ""), release_date=self.__format_date(jav.get("date", None)),
                                     is_downloadable=jav.get('is_downloadable', False), has_subtitle=jav.get('has_subtitle', False), ranking=jav.get('ranking', 0), 
-                                    has_code=rank_type=="censored", ranking_type=period, ranking_date=today, data_source=self.rank_list_javmenu_censored_day, retrieval_time=nowtime)
+                                    has_code=rank_type=="censored", ranking_type=period, ranking_date=today, data_source=crawl_source, retrieval_time=nowtime)
             
             self.__db_insert_javranking(javranking)
             logger.info("[JavCrawler][javmenu]已写入数据库[{}/{}]: {}".format(ind+1, len(javlist), str(javranking)))
 
-        self.__add_crawl_history(datetime.now(), self.rank_list_javmenu_censored_day, "成功抓取 %s 条数据" % len(javlist))
+        self.__add_crawl_hisstory(datetime.now(), crawl_source, "成功抓取 %s 条数据" % len(javlist))
         logger.info("[JavCrawler][javmenu]{}抓取任务结束".format(source))
             
 
