@@ -32,6 +32,7 @@ from app.utils.string import StringUtils
 from app.utils.system import SystemUtils
 from .javbus import JavbusWeb
 from .javlib import JavlibWeb
+from .javmenu import JavMenuWeb
 from .javfiletransfer import JavFileTransferModule
 from .javscraper import JavScraper
 
@@ -70,7 +71,7 @@ class JavDirMonitor(_PluginBase):
     # 主题色
     plugin_color = "#E0995E"
     # 插件版本
-    plugin_version = "2.6"
+    plugin_version = "2.7"
     # 插件作者
     plugin_author = "boji"
     # 作者主页
@@ -119,6 +120,7 @@ class JavDirMonitor(_PluginBase):
         self.tmdbchain = TmdbChain()
         self.javbus = JavbusWeb()
         self.javlib = JavlibWeb()
+        self.javmenu = JavMenuWeb()
         self.jav_file_transfer = JavFileTransferModule()
         self.jav_scraper = JavScraper()
         # 清空配置
@@ -367,6 +369,10 @@ class JavDirMonitor(_PluginBase):
             return None
         logger.info("【Javbus】查询到数据：%s" % jav_info.get("title"))
         
+        # 获取封面图
+        javmenu_info = self.javmenu.detail(id)
+        jav_info['backdrop_img'] = javmenu_info.get('img', None) or ''
+        jav_info['post_img'] = javmenu_info.get('img', None) or ''
         
         # 去javlib获取评分
         logger.info("【Javlib】正在通过Javlib API查询Jav详情：%s" % id)
