@@ -30,7 +30,7 @@ class Javscraper(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.2"
+    plugin_version = "0.0.3"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -130,39 +130,41 @@ class Javscraper(_PluginBase):
             }
         )
 
-    # @staticmethod
-    # def get_command() -> List[Dict[str, Any]]:
-    #     """
-    #     定义远程控制命令
-    #     :return: 命令关键字、事件、描述、附带数据
-    #     """
-    #     return [{
-    #         "cmd": "/site_signin",
-    #         "event": EventType.PluginAction,
-    #         "desc": "站点签到",
-    #         "category": "站点",
-    #         "data": {
-    #             "action": "site_signin"
-    #         }
-    #     }]
+    @staticmethod
+    def get_command() -> List[Dict[str, Any]]:
+        """
+        定义远程控制命令
+        :return: 命令关键字、事件、描述、附带数据
+        """
+        return []
+        # return [{
+        #     "cmd": "/site_signin",
+        #     "event": EventType.PluginAction,
+        #     "desc": "站点签到",
+        #     "category": "站点",
+        #     "data": {
+        #         "action": "site_signin"
+        #     }
+        # }]
 
-    # def get_api(self) -> List[Dict[str, Any]]:
-    #     """
-    #     获取插件API
-    #     [{
-    #         "path": "/xx",
-    #         "endpoint": self.xxx,
-    #         "methods": ["GET", "POST"],
-    #         "summary": "API说明"
-    #     }]
-    #     """
-    #     return [{
-    #         "path": "/signin_by_domain",
-    #         "endpoint": self.signin_by_domain,
-    #         "methods": ["GET"],
-    #         "summary": "站点签到",
-    #         "description": "使用站点域名签到站点",
-    #     }]
+    def get_api(self) -> List[Dict[str, Any]]:
+        """
+        获取插件API
+        [{
+            "path": "/xx",
+            "endpoint": self.xxx,
+            "methods": ["GET", "POST"],
+            "summary": "API说明"
+        }]
+        """
+        return []
+        # return [{
+        #     "path": "/signin_by_domain",
+        #     "endpoint": self.signin_by_domain,
+        #     "methods": ["GET"],
+        #     "summary": "站点签到",
+        #     "description": "使用站点域名签到站点",
+        # }]
 
     def get_service(self) -> List[Dict[str, Any]]:
         """
