@@ -30,7 +30,7 @@ class JavCrawler(_PluginBase):
     # 插件图标
     plugin_icon = "statistic.png"
     # 插件版本
-    plugin_version = "0.0.4"
+    plugin_version = "0.0.5"
     # 插件作者
     plugin_author = "miiio"
     # 作者主页
@@ -647,7 +647,7 @@ class JavCrawler(_PluginBase):
             "info": info
         })
         sorted(history, key=lambda x: x["time"], reverse=True)
-        self.save_data(history)
+        self.save_data("crawl_history", history)
 
     def stop_service(self):
         """
